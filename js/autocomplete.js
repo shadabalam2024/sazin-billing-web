@@ -106,17 +106,24 @@ function attachProductAutocomplete(row, tableId) {
     }
   }
 
+  // Only suggest items that are in stock (stockQty > 0)
+  function inStockItems() { return _inventoryCache.filter(i => (parseFloat(i.stockQty) || 0) > 0); }
+
   input.addEventListener("input", () => {
     const q = input.value.trim().toLowerCase();
     checkMatch();
     if (!q) { hideSugBox(); return; }
-    renderSuggestions(_inventoryCache.filter(i => i.name.toLowerCase().includes(q)).slice(0, 10));
+    const matches = inStockItems().filter(i => i.name.toLowerCase().includes(q)).slice(0, 10);
+    if (matches.length) renderSuggestions(matches); else hideSugBox();
     (tableId === "qMeasurements" ? calcQuoteRow : calculateRow)(row);
   });
 
   input.addEventListener("focus", () => {
     const q = input.value.trim().toLowerCase();
-    if (q) renderSuggestions(_inventoryCache.filter(i => i.name.toLowerCase().includes(q)).slice(0, 10));
+    if (q) {
+      const matches = inStockItems().filter(i => i.name.toLowerCase().includes(q)).slice(0, 10);
+      if (matches.length) renderSuggestions(matches);
+    }
   });
 
   input.addEventListener("blur", () => {
@@ -127,8 +134,12 @@ function attachProductAutocomplete(row, tableId) {
   dropBtn.addEventListener("mousedown", e => e.preventDefault());
   dropBtn.addEventListener("click", () => {
     if (sugBox.style.display === "block") { hideSugBox(); return; }
-    if (_inventoryCache.length) {
-      renderSuggestions(_inventoryCache);
+    const inStock = inStockItems();
+    if (inStock.length) {
+      renderSuggestions(inStock);
+    } else if (_inventoryCache.length) {
+      sugBox.innerHTML = `<div class="prod-sug-item prod-sug-empty">All items are out of stock. Add stock in the Inventory tab.</div>`;
+      showSugBox();
     } else {
       sugBox.innerHTML = `<div class="prod-sug-item prod-sug-empty">No inventory items yet — add them in the Inventory tab.</div>`;
       showSugBox();
