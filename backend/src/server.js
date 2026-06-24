@@ -194,48 +194,12 @@ function salesRecords(records) {
   return records.filter(r => !r.docType || r.docType === 'invoice');
 }
 
-// ════════════════════ DEBUG (temporary — remove after login confirmed) ════════════════════
-
-app.get('/debug-connection', async (req, res) => {
-  const env = {
-    SUPABASE_URL: process.env.SUPABASE_URL ? process.env.SUPABASE_URL.slice(0, 30) + '...' : 'NOT SET',
-    SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? process.env.SUPABASE_SERVICE_KEY.slice(0, 10) + '...' : 'NOT SET',
-    JWT_SECRET: process.env.JWT_SECRET ? 'SET (' + process.env.JWT_SECRET.length + ' chars)' : 'NOT SET',
-    NODE_ENV: process.env.NODE_ENV || 'not set'
-  };
-  let dbStatus = 'not tested';
-  let userCount = null;
-  let dbError = null;
-  try {
-    const { data, error } = await supabase.from('users').select('username, role').limit(10);
-    if (error) { dbStatus = 'ERROR'; dbError = error.message; }
-    else { dbStatus = 'OK'; userCount = data?.length; }
-  } catch (e) { dbStatus = 'EXCEPTION'; dbError = e.message; }
-  res.json({ env, dbStatus, userCount, dbError });
-});
-
 // ════════════════════ AUTH ════════════════════
 
 app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body || {};
-    const { data: users, error: dbErr } = await supabase.from('users').select('*').eq('username', username).limit(1);
-    // TEMP DEBUG — remove after login confirmed
-    if (req.headers['x-debug'] === 'true') {
-      const u = users?.[0];
-      const hashCheck = u ? bcrypt.compareSync(password || '', u.password_hash) : null;
-      return res.json({
-        debug: true,
-        hasSupabaseUrl: !!process.env.SUPABASE_URL,
-        hasSupabaseKey: !!process.env.SUPABASE_SERVICE_KEY,
-        supabaseUrlPrefix: (process.env.SUPABASE_URL || '').slice(0, 30),
-        dbErr: dbErr ? dbErr.message : null,
-        userCount: users ? users.length : null,
-        usernameQueried: username,
-        storedHashPrefix: u ? u.password_hash.slice(0, 20) : null,
-        hashMatchResult: hashCheck
-      });
-    }
+    const { data: users } = await supabase.from('users').select('*').eq('username', username).limit(1);
     const user = users?.[0];
     if (!user || !bcrypt.compareSync(password || '', user.password_hash))
       return res.json({ success: false, message: 'Invalid username or password.' });
