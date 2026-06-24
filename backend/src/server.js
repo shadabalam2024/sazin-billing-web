@@ -222,6 +222,8 @@ app.post('/login', async (req, res) => {
     const { data: users, error: dbErr } = await supabase.from('users').select('*').eq('username', username).limit(1);
     // TEMP DEBUG — remove after login confirmed
     if (req.headers['x-debug'] === 'true') {
+      const u = users?.[0];
+      const hashCheck = u ? bcrypt.compareSync(password || '', u.password_hash) : null;
       return res.json({
         debug: true,
         hasSupabaseUrl: !!process.env.SUPABASE_URL,
@@ -229,7 +231,9 @@ app.post('/login', async (req, res) => {
         supabaseUrlPrefix: (process.env.SUPABASE_URL || '').slice(0, 30),
         dbErr: dbErr ? dbErr.message : null,
         userCount: users ? users.length : null,
-        usernameQueried: username
+        usernameQueried: username,
+        storedHashPrefix: u ? u.password_hash.slice(0, 20) : null,
+        hashMatchResult: hashCheck
       });
     }
     const user = users?.[0];
