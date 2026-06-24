@@ -72,7 +72,7 @@ function renderClients(data) {
     return;
   }
   data = [...data].reverse();
-  const isAdmin = currentRole === "admin";
+  const isAdmin = currentRole === "admin" || (Array.isArray(currentPermissions) && currentPermissions.includes("clients"));
   document.getElementById("searchResults").innerHTML = data.map(client => {
     const t = quickTotals(client);
     const status = client.paymentStatus || "unpaid";

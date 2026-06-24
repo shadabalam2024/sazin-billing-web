@@ -21,6 +21,7 @@ function filterPurchases() {
 function renderPurchases(purchases) {
   const el = document.getElementById("purchaseHistory");
   if (!purchases.length) { el.innerHTML = "<p style='color:#888'>No purchases found.</p>"; return; }
+  const canEdit = currentRole === "admin" || (Array.isArray(currentPermissions) && currentPermissions.includes("purchases"));
   el.innerHTML = purchases.map(p => {
     const total = parseFloat(p.totalAmount || 0);
     const amountPaid = typeof p.amountPaid === "number" ? p.amountPaid
@@ -57,7 +58,7 @@ function renderPurchases(purchases) {
             <span style="color:#555;">${new Date(pay.date).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" })}</span>
             <span style="font-weight:600;color:#0078d7;">₹ ${parseFloat(pay.amount || 0).toFixed(2)}</span>
             <span style="color:#888;flex:1;text-align:center;">${esc(pay.note || "—")}</span>
-            ${currentRole === "admin" ? `<button class="btn red small-btn" onclick="deletePurchasePayment('${esc(p.id)}','${esc(pay.id)}')" style="padding:2px 7px;font-size:0.75rem;">✕</button>` : ""}
+            ${canEdit ? `<button class="btn red small-btn" onclick="deletePurchasePayment('${esc(p.id)}','${esc(pay.id)}')" style="padding:2px 7px;font-size:0.75rem;">✕</button>` : ""}
           </div>`).join("")}
       </div>` : "";
 
@@ -71,8 +72,8 @@ function renderPurchases(purchases) {
         </div>
         <div class="card-actions">
           <span class="payment-badge ${ps === "paid" ? "badge-paid" : ps === "partial" ? "badge-partial" : "badge-unpaid"}">${ps.charAt(0).toUpperCase() + ps.slice(1)}</span>
-          ${currentRole === "admin" ? `<button class="btn blue small-btn" onclick="openEditPurchaseModal('${esc(p.id)}')">✏️</button>` : ""}
-          ${currentRole === "admin" ? `<button class="btn red small-btn" onclick="deletePurchase('${esc(p.id)}')">🗑️</button>` : ""}
+          ${canEdit ? `<button class="btn blue small-btn" onclick="openEditPurchaseModal('${esc(p.id)}')">✏️</button>` : ""}
+          ${canEdit ? `<button class="btn red small-btn" onclick="deletePurchase('${esc(p.id)}')">🗑️</button>` : ""}
         </div>
       </div>
       <div style="overflow-x:auto;">
@@ -98,7 +99,7 @@ function renderPurchases(purchases) {
       ${gstHtml}
       ${paymentBar}
       ${paymentLog}
-      ${currentRole === "admin" && ps !== "paid" ? `<div style="margin-top:10px;"><button class="btn green small-btn" onclick="openAddPurchasePaymentModal('${esc(p.id)}')">💰 Record Payment</button></div>` : ""}
+      ${canEdit && ps !== "paid" ? `<div style="margin-top:10px;"><button class="btn green small-btn" onclick="openAddPurchasePaymentModal('${esc(p.id)}')">💰 Record Payment</button></div>` : ""}
       ${p.notes ? `<p style="color:#666;margin-top:8px;font-size:0.88rem;">${esc(p.notes)}</p>` : ""}
     </div>`;
   }).join("");

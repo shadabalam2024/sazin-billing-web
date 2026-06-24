@@ -31,15 +31,13 @@ function renderHistory(records) {
       const badge = isInvoice
         ? `<span class="ledger-pay-badge ledger-pay-${ps}">${ps.charAt(0).toUpperCase() + ps.slice(1)}</span>`
         : '<span style="color:#aaa;font-size:0.78rem;">—</span>';
-      const actions = currentRole === "admin"
-        ? `<td class="inv-actions">
+      const actions = `<td class="inv-actions">
             <button class="btn blue small-btn" onclick="printFromHistory('${esc(r.invoiceNumber)}')">🖨</button>
             ${canEdit ? `<button class="btn blue small-btn" onclick="openEditModal('${esc(r.invoiceNumber)}')">✏️</button>` : ''}
             ${isInvoice && ps !== 'paid' ? `<button class="btn green small-btn" onclick="openInvoicePaymentModal('${esc(r.invoiceNumber)}')">💰</button>` : ''}
             ${isInvoice ? `<button class="btn small-btn" style="background:#e67e22;color:#fff;" onclick="openReturnExchangeModal('${esc(r.invoiceNumber)}')">↩</button>` : ''}
             <button class="btn red small-btn" onclick="deleteHistoryEntry('${esc(r.invoiceNumber)}','${esc(r.docType || 'invoice')}')">🗑</button>
-           </td>`
-        : `<td class="inv-actions"><button class="btn blue small-btn" onclick="printFromHistory('${esc(r.invoiceNumber)}')">🖨</button></td>`;
+           </td>`;
       return `<tr>
         <td style="white-space:nowrap;font-size:0.85rem;">${esc(r.dateStr)}</td>
         <td style="font-weight:600;font-size:0.85rem;white-space:nowrap;">${esc(r.invoiceNumber)}</td>

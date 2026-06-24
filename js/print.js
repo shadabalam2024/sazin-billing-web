@@ -158,7 +158,7 @@ function openLoadTemplateModal() {
         </div>
         <div style="display:flex;gap:6px;">
           <button class="btn blue small-btn" onclick='loadTemplateItems(${JSON.stringify(t).replace(/'/g,"&#39;")});closeLoadTemplateModal()'>Load</button>
-          ${currentRole === "admin" ? `<button class="btn red small-btn" onclick="deleteTemplate('${esc(t.id)}',this.closest('.catalog-pick-row'))">Delete</button>` : ""}
+          <button class="btn red small-btn" onclick="deleteTemplate('${esc(t.id)}',this.closest('.catalog-pick-row'))">Delete</button>
         </div>
       </div>`).join("");
     document.getElementById("loadTemplateModal").style.display = "flex";
