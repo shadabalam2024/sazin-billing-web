@@ -8,6 +8,12 @@ let currentPermissions = null;
 try { currentPermissions = JSON.parse(sessionStorage.getItem("permissions") || "null"); } catch(e) {}
 if (!TOKEN || !currentRole || !currentUser) window.location.href = "login.html";
 
+// Re-check auth when browser restores page from back-forward cache (bfcache).
+// Without this, pressing Back after logout shows the cached app page.
+window.addEventListener("pageshow", (e) => {
+  if (e.persisted && !sessionStorage.getItem("token")) window.location.href = "login.html";
+});
+
 // API base URL — set window.SAZIN_API_URL in config.js (or index.html) to point at your backend.
 const API = window.SAZIN_API_URL || "http://localhost:3000";
 let SETTINGS = {};
