@@ -194,6 +194,26 @@ function salesRecords(records) {
   return records.filter(r => !r.docType || r.docType === 'invoice');
 }
 
+// ════════════════════ DEBUG (temporary — remove after login confirmed) ════════════════════
+
+app.get('/debug-connection', async (req, res) => {
+  const env = {
+    SUPABASE_URL: process.env.SUPABASE_URL ? process.env.SUPABASE_URL.slice(0, 30) + '...' : 'NOT SET',
+    SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? process.env.SUPABASE_SERVICE_KEY.slice(0, 10) + '...' : 'NOT SET',
+    JWT_SECRET: process.env.JWT_SECRET ? 'SET (' + process.env.JWT_SECRET.length + ' chars)' : 'NOT SET',
+    NODE_ENV: process.env.NODE_ENV || 'not set'
+  };
+  let dbStatus = 'not tested';
+  let userCount = null;
+  let dbError = null;
+  try {
+    const { data, error } = await supabase.from('users').select('username, role').limit(10);
+    if (error) { dbStatus = 'ERROR'; dbError = error.message; }
+    else { dbStatus = 'OK'; userCount = data?.length; }
+  } catch (e) { dbStatus = 'EXCEPTION'; dbError = e.message; }
+  res.json({ env, dbStatus, userCount, dbError });
+});
+
 // ════════════════════ AUTH ════════════════════
 
 app.post('/login', async (req, res) => {
