@@ -20,7 +20,7 @@ function loadUsers() {
 }
 
 function _setPermCheckboxes(perms) {
-  const defaults = ["billing","quotations","clients"];
+  const defaults = ["billing","quotations","clients","history","inventory","purchases","expenses"];
   const active = Array.isArray(perms) ? perms : defaults;
   document.querySelectorAll("#userPermissionsSection input[name=perm]").forEach(cb => {
     cb.checked = active.includes(cb.value);
