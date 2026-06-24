@@ -163,8 +163,9 @@ function renderLedgerTable(rows) {
       ? `${esc(r.party)}<br><small style="color:#999">${shortDesc}</small>`
       : esc(r.party);
 
-    const isInvoiceType = r.type === "Sale" || r.type === "Proforma";
-    const isPurchase    = r.type === "Purchase";
+    const isInvoiceType   = r.type === "Sale" || r.type === "Proforma";
+    const isPurchase      = r.type === "Purchase";
+    const hasHistoryEntry = isInvoiceType || r.type === "Credit Note" || r.type === "Debit Note";
 
     // Build credit cell
     let creditCell;
@@ -232,7 +233,7 @@ function renderLedgerTable(rows) {
     return `<tr class="ledger-row">
       <td class="ledger-date">${dateStr}</td>
       <td><span class="ledger-type-chip" style="background:${st.bg};color:${st.color}">${st.icon} ${r.type}</span></td>
-      <td class="ledger-ref">${esc(r.reference)}<br>${payBadge}${paymentLog}</td>
+      <td class="ledger-ref">${hasHistoryEntry ? `<a href="#" class="ledger-inv-link" onclick="goToHistoryBill('${esc(r.reference)}');return false;">${esc(r.reference)}</a>` : esc(r.reference)}<br>${payBadge}${paymentLog}</td>
       <td class="ledger-party">${partyDesc}</td>
       ${debitCell}
       ${creditCell}

@@ -1,4 +1,7 @@
 // ── ANALYTICS ──
+let _analyticsMonthChart = null;
+let _analyticsTopChart = null;
+
 function loadAnalytics() {
   if (currentRole !== "admin") return;
   apiFetch("/analytics").then(res => res.json()).then(data => {
@@ -6,14 +9,82 @@ function loadAnalytics() {
       <div class="stat-box"><span class="stat-label">Date</span><span class="stat-value">${esc(data.daily.date)}</span></div>
       <div class="stat-box"><span class="stat-label">Invoices Today</span><span class="stat-value">${data.daily.invoiceCount}</span></div>
       <div class="stat-box"><span class="stat-label">Revenue Today</span><span class="stat-value">${money(data.daily.total)}</span></div>
-      <div class="stat-box clickable" onclick="showOutstandingModal()"><span class="stat-label">Outstanding Dues</span><span class="stat-value dues">${money(data.unpaidTotal)}</span><span style="font-size:0.7rem;color:#dc3545;">Click to view</span></div>`;
+      <div class="stat-box clickable" onclick="showOutstandingModal()"><span class="stat-label">Outstanding Dues</span><span class="stat-value dues">${money(data.unpaidTotal)}</span><span style="font-size:0.7rem;color:#dc2626;">Click to view</span></div>`;
     const years = Object.keys(data.yearly).sort((a, b) => b - a);
     document.getElementById("yearlyReport").innerHTML = `<table class="result-table"><thead><tr><th>Year</th><th>Revenue</th><th>Outstanding</th></tr></thead><tbody>${years.map(y => `<tr><td>${y}</td><td>${money(data.yearly[y])}</td><td><a href="#" class="client-link" onclick="showOutstandingForPeriod('year','${y}')">${money(data.yearlyOutstanding[y]||0)}</a></td></tr>`).join("")}</tbody></table>`;
-    const months = Object.keys(data.monthly).sort((a, b) => b.localeCompare(a)).slice(0, 12);
-    document.getElementById("monthlyReport").innerHTML = `<table class="result-table"><thead><tr><th>Month</th><th>Revenue</th><th>Outstanding</th></tr></thead><tbody>${months.map(m => { const [yr, mo] = m.split("-"); const label = new Date(yr, mo - 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" }); return `<tr><td>${label}</td><td>${money(data.monthly[m])}</td><td><a href="#" class="client-link" onclick="showOutstandingForPeriod('month','${m}')">${money(data.monthlyOutstanding[m]||0)}</a></td></tr>`; }).join("")}</tbody></table>`;
+    const months = Object.keys(data.monthly).sort((a, b) => a.localeCompare(b)).slice(-12);
+    document.getElementById("monthlyReport").innerHTML = `<table class="result-table"><thead><tr><th>Month</th><th>Revenue</th><th>Outstanding</th></tr></thead><tbody>${[...months].reverse().map(m => { const [yr, mo] = m.split("-"); const label = new Date(yr, mo - 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" }); return `<tr><td>${label}</td><td>${money(data.monthly[m])}</td><td><a href="#" class="client-link" onclick="showOutstandingForPeriod('month','${m}')">${money(data.monthlyOutstanding[m]||0)}</a></td></tr>`; }).join("")}</tbody></table>`;
     document.getElementById("topClientsReport").innerHTML = `<table class="result-table"><thead><tr><th>Rank</th><th>Name</th><th>Mobile</th><th>Invoices</th><th>Total Revenue</th></tr></thead><tbody>${data.topClients.map((c, i) => `<tr><td>${i + 1}</td><td><a href="#" onclick="openClientFromAnalytics('${esc(c.mobile)}')" class="client-link">${esc(c.name)}</a></td><td>${esc(c.mobile)}</td><td>${c.invoiceCount}</td><td>${money(c.total)}</td></tr>`).join("")}</tbody></table>`;
+    _renderMonthlyChart(months, data.monthly, data.monthlyOutstanding);
+    _renderTopClientsChart(data.topClients);
   });
   loadProfitability();
+}
+
+function _renderMonthlyChart(months, monthly, outstanding) {
+  const ctx = document.getElementById("analyticsMonthChart");
+  if (!ctx || !months.length) return;
+  if (_analyticsMonthChart) { _analyticsMonthChart.destroy(); _analyticsMonthChart = null; }
+  const labels = months.map(m => { const [yr, mo] = m.split("-"); return new Date(yr, mo - 1).toLocaleDateString("en-IN", { month: "short", year: "2-digit" }); });
+  const revenue = months.map(m => monthly[m] || 0);
+  const due     = months.map(m => outstanding[m] || 0);
+  _analyticsMonthChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "Revenue", data: revenue, backgroundColor: "rgba(0,120,215,0.82)", borderRadius: 5, borderSkipped: false, maxBarThickness: 28 },
+        { label: "Outstanding", data: due, backgroundColor: "rgba(234,88,12,0.68)", borderRadius: 5, borderSkipped: false, maxBarThickness: 28 }
+      ]
+    },
+    options: {
+      responsive: true,
+      aspectRatio: 3.5,
+      plugins: {
+        legend: { position: "top", align: "end", labels: { padding: 14, boxWidth: 10, boxHeight: 10, font: { family: "'Inter', sans-serif", size: 12 } } },
+        tooltip: { callbacks: { label: c => " ₹" + c.parsed.y.toLocaleString("en-IN", { minimumFractionDigits: 2 }) } }
+      },
+      scales: {
+        y: { beginAtZero: true, grid: { color: "rgba(0,0,0,0.04)" }, border: { display: false }, ticks: { callback: v => "₹" + (v >= 1000 ? (v / 1000).toFixed(0) + "k" : v), maxTicksLimit: 5, font: { family: "'Inter', sans-serif", size: 11 } } },
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: "'Inter', sans-serif", size: 11 } } }
+      }
+    }
+  });
+}
+
+function _renderTopClientsChart(topClients) {
+  const ctx = document.getElementById("analyticsTopChart");
+  if (!ctx || !topClients.length) return;
+  if (_analyticsTopChart) { _analyticsTopChart.destroy(); _analyticsTopChart = null; }
+  const top = topClients.slice(0, 8);
+  const colors = ["rgba(0,120,215,0.85)","rgba(22,163,74,0.82)","rgba(234,88,12,0.82)","rgba(124,58,237,0.82)","rgba(220,38,38,0.78)","rgba(14,165,233,0.82)","rgba(245,158,11,0.82)","rgba(16,185,129,0.82)"];
+  _analyticsTopChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: top.map(c => c.name.length > 20 ? c.name.slice(0, 18) + "…" : c.name),
+      datasets: [{
+        label: "Revenue",
+        data: top.map(c => c.total),
+        backgroundColor: colors.slice(0, top.length),
+        borderRadius: 6,
+        borderSkipped: false,
+        maxBarThickness: 22,
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      aspectRatio: 2.8,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => " ₹" + c.parsed.x.toLocaleString("en-IN", { minimumFractionDigits: 2 }) } }
+      },
+      scales: {
+        x: { beginAtZero: true, grid: { color: "rgba(0,0,0,0.04)" }, border: { display: false }, ticks: { callback: v => "₹" + (v >= 1000 ? (v / 1000).toFixed(0) + "k" : v), maxTicksLimit: 5, font: { family: "'Inter', sans-serif", size: 11 } } },
+        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: "'Inter', sans-serif", size: 12, weight: "600" } } }
+      }
+    }
+  });
 }
 
 function openClientFromAnalytics(mobile) {

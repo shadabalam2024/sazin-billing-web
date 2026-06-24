@@ -5,7 +5,7 @@ const DOCTYPE_COLORS = { invoice: '#0078d7', proforma: '#6f42c1', quote: '#fd7e1
 function loadHistory() {
   apiFetch("/history").then(res => res.json()).then(records => {
     _historyData = records;
-    renderHistory(records);
+    filterHistory();
   }).catch(() => {});
 }
 
@@ -63,6 +63,29 @@ function filterHistory() {
     if (q && !r.name.toLowerCase().includes(q) && !r.mobile.includes(q) && !r.invoiceNumber.toLowerCase().includes(q)) return false;
     return true;
   }));
+}
+
+function goToHistoryBill(invoiceNumber) {
+  // Set search BEFORE switching tab so loadHistory → filterHistory sees it
+  document.getElementById("historySearch").value = invoiceNumber;
+  document.getElementById("historyTypeFilter").value = "";
+  document.getElementById("historyStatusFilter").value = "";
+  // Switch tab (calls loadHistory which calls filterHistory when done)
+  const histBtn = document.querySelector('.tab-btn[onclick*="history"]');
+  showTab("history", histBtn);
+  // After render, scroll to and highlight the row
+  setTimeout(() => {
+    const rows = document.querySelectorAll("#historyList tbody tr");
+    rows.forEach(row => {
+      const docCell = row.cells[1];
+      if (docCell && docCell.textContent.trim() === invoiceNumber) {
+        row.style.transition = "background 0.4s";
+        row.style.background = "#fff3cd";
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => { row.style.background = ""; }, 2500);
+      }
+    });
+  }, 700);
 }
 
 function deleteHistoryEntry(invoiceNumber, docType) {

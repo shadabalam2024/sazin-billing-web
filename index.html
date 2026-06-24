@@ -2,6 +2,9 @@
 <html>
 <head>
   <title>SAZIN TECH - Billing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="config.js"></script>
 </head>
@@ -26,6 +29,13 @@
     <div class="app-body">
     <!-- TAB NAV (vertical sidebar) -->
     <div class="tab-nav">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">S</div>
+        <div class="sidebar-brand-text">
+          <div class="sidebar-brand-name">SAZIN</div>
+          <div class="sidebar-brand-sub">Billing System</div>
+        </div>
+      </div>
       <button class="tab-btn" data-perm="dashboard" onclick="showTab('dashboard', this)">🏠 Dashboard</button>
       <button class="tab-btn active" data-perm="billing" onclick="showTab('billing', this)">🧾 Billing</button>
       <button class="tab-btn" data-perm="quotations" onclick="showTab('quotations', this)">📝 Quotations</button>
@@ -48,6 +58,16 @@
         <div class="dash-cards" id="dashTodayCards"></div>
         <div class="dash-section-title">📆 This Month</div>
         <div class="dash-cards" id="dashMonthCards"></div>
+        <div class="dash-chart-row">
+          <div class="card dash-chart-card">
+            <h3 class="dash-sub-title">📊 Month at a Glance</h3>
+            <canvas id="dashMonthChart"></canvas>
+          </div>
+          <div class="card dash-chart-card">
+            <h3 class="dash-sub-title">📅 Today's Snapshot</h3>
+            <canvas id="dashTodayChart"></canvas>
+          </div>
+        </div>
         <div class="dash-two-col">
           <div class="card">
             <h3 class="dash-sub-title">🕐 Recent Sales</h3>
@@ -151,7 +171,6 @@
       <div class="button-row">
         <button class="btn blue" onclick="addRow()">+ Add Row</button>
         <button class="btn green" onclick="saveData()">💾 Save</button>
-        <button class="btn yellow" onclick="loadHistory()">📋 Load History</button>
         <button class="btn blue" onclick="printBill()">🖨️ Print</button>
         <button class="btn blue" onclick="savePDF()">📄 Save as PDF</button>
         <button class="btn green" onclick="shareWhatsApp()">💬 WhatsApp</button>
@@ -160,24 +179,6 @@
         <button class="btn yellow" onclick="openLoadTemplateModal()">📂 Load Template</button>
       </div>
 
-      <div class="card">
-        <h2>Search Entries</h2>
-        <div class="search-row">
-          <div class="search-group">
-            <input id="searchMobile" placeholder="10-digit mobile">
-            <button class="btn blue" onclick="searchByMobile()">Search by Mobile</button>
-          </div>
-          <div class="search-group">
-            <input id="searchInvoice" placeholder="e.g. SAZIN/26-27/001">
-            <button class="btn blue" onclick="searchByInvoice()">Search by Invoice</button>
-          </div>
-          <div class="search-group">
-            <input type="number" id="filterYear" placeholder="e.g. 2026">
-            <button class="btn blue" onclick="filterByYear()">Filter by Year</button>
-          </div>
-        </div>
-        <div id="searchResults"></div>
-      </div>
     </div>
 
     <!-- =================== TAB: QUOTATIONS =================== -->
@@ -474,8 +475,16 @@
         </div>
         <div class="analytics-section"><h3>📅 Today's Report</h3><div id="dailyReport" class="stat-row"></div></div>
         <div class="analytics-section"><h3>📆 Yearly Revenue</h3><div id="yearlyReport"></div></div>
-        <div class="analytics-section"><h3>📈 Monthly Revenue</h3><div id="monthlyReport"></div></div>
-        <div class="analytics-section"><h3>🏆 Top Clients by Revenue</h3><div id="topClientsReport"></div></div>
+        <div class="analytics-section">
+          <h3>📈 Monthly Revenue Trend</h3>
+          <div class="analytics-chart-wrap"><canvas id="analyticsMonthChart"></canvas></div>
+          <div id="monthlyReport"></div>
+        </div>
+        <div class="analytics-section">
+          <h3>🏆 Top Clients by Revenue</h3>
+          <div class="analytics-chart-wrap"><canvas id="analyticsTopChart"></canvas></div>
+          <div id="topClientsReport"></div>
+        </div>
 
         <!-- GST Return Report -->
         <div class="analytics-section">
@@ -841,6 +850,7 @@
     </div>
 
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <!-- core must load first (globals, apiFetch, esc, money, toast) -->
   <script src="js/core.js"></script>
   <!-- settings before auth (auth DOMContentLoaded calls loadSettings) -->
