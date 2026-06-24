@@ -7,7 +7,83 @@ function onDocTypeChange() {
   document.getElementById("docNumLabel").textContent = labels[dt] || "Invoice No:";
   const numEl = document.getElementById("invoiceNumber");
   numEl.textContent = "Loading..."; numEl.classList.remove("preview", "confirmed");
+  // Clear original invoice field and status when switching doc type
+  const origInput = document.getElementById("originalInvoiceNo");
+  if (origInput) origInput.value = "";
+  const statusEl = document.getElementById("originalInvoiceFetchStatus");
+  if (statusEl) statusEl.textContent = "";
   fetchDocNumberPreview(dt);
+}
+
+// ── AUTO-FETCH ORIGINAL INVOICE DETAILS FOR CREDIT/DEBIT NOTES ──
+let _origInvoiceTimer = null;
+function onOriginalInvoiceType() {
+  const statusEl = document.getElementById("originalInvoiceFetchStatus");
+  const val = document.getElementById("originalInvoiceNo").value.trim();
+  clearTimeout(_origInvoiceTimer);
+  if (!val) { statusEl.textContent = ""; return; }
+  statusEl.style.color = "#888";
+  statusEl.textContent = "Looking up…";
+  _origInvoiceTimer = setTimeout(() => _fetchAndFillOriginalInvoice(val), 600);
+}
+
+function _fetchAndFillOriginalInvoice(invoiceNo) {
+  const statusEl = document.getElementById("originalInvoiceFetchStatus");
+  // Use search endpoint — invoice numbers contain "/" which breaks URL path params
+  apiFetch(`/search-invoice/${encodeURIComponent(invoiceNo)}`)
+    .then(r => r.json())
+    .then(results => {
+      // Find exact match (search returns partial matches)
+      const rec = Array.isArray(results)
+        ? results.find(r => r.invoiceNumber === invoiceNo)
+        : null;
+      if (!rec) {
+        statusEl.style.color = "#dc3545";
+        statusEl.textContent = "✗ Invoice not found";
+        return;
+      }
+      // Fill customer details from the original invoice
+      document.getElementById("name").value = rec.name || "";
+      document.getElementById("mobile").value = rec.mobile || "";
+      document.getElementById("address").value = rec.address || "";
+      const gstin = document.getElementById("recipientGstin");
+      if (gstin) gstin.value = rec.recipientGstin || "";
+      const pos = document.getElementById("placeOfSupplyState");
+      if (pos) pos.value = rec.placeOfSupplyState || "";
+      const posc = document.getElementById("placeOfSupplyStateCode");
+      if (posc) posc.value = rec.placeOfSupplyStateCode || "";
+      // Copy line items so user can adjust quantities/amounts for the note
+      if (Array.isArray(rec.lines) && rec.lines.length) {
+        // Clear existing rows
+        document.querySelector("#measurements tbody").innerHTML = "";
+        rec.lines.forEach(line => {
+          const billedQty = parseFloat(line.billedQty ?? line.qty) || 1;
+          // Use unit=Piece with count=billedQty, length/width=1 so billed qty matches original
+          addRow({
+            name: line.description || "",
+            hsn: line.hsn || "",
+            cost: line.rate ?? "",
+            unit: line.unit || "Piece"
+          });
+          const rows = document.querySelectorAll("#measurements tbody tr");
+          const row = rows[rows.length - 1];
+          if (!row) return;
+          row.querySelector(".r-unit").value = line.unit || "Piece";
+          row.querySelector(".r-count").value = billedQty;
+          row.querySelector(".r-length").value = 1;
+          row.querySelector(".r-width").value = 1;
+          row.querySelector(".r-disc").value = line.discountPct ?? 0;
+          row.querySelector(".r-gst").value = line.gstRate ?? SETTINGS.defaultGstRate ?? 18;
+          calculateRow(row);
+        });
+      }
+      statusEl.style.color = "#0a7c3e";
+      statusEl.textContent = `✓ ${rec.name}`;
+    })
+    .catch(() => {
+      statusEl.style.color = "#dc3545";
+      statusEl.textContent = "✗ Error fetching invoice";
+    });
 }
 
 function fetchDocNumberPreview(docType, attempts = 20, delay = 500) {
@@ -237,5 +313,7 @@ function resetForm() {
   document.getElementById("billDocType").value = "invoice";
   document.getElementById("originalInvoiceRow").style.display = "none";
   document.getElementById("docNumLabel").textContent = "Invoice No:";
+  const statusEl = document.getElementById("originalInvoiceFetchStatus");
+  if (statusEl) statusEl.textContent = "";
   loadNextInvoicePreview();
 }

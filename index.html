@@ -95,7 +95,8 @@
           <!-- Against Invoice (for credit/debit notes) -->
           <div id="originalInvoiceRow" style="display:none;margin-bottom:12px;display:none;align-items:center;gap:10px;flex-wrap:wrap;">
             <label style="font-weight:600;white-space:nowrap;">Against Invoice No:</label>
-            <input id="originalInvoiceNo" placeholder="e.g. SAZIN/26-27/042" style="max-width:260px;margin:0;">
+            <input id="originalInvoiceNo" placeholder="e.g. SAZIN/26-27/042" style="max-width:260px;margin:0;" oninput="onOriginalInvoiceType()">
+            <span id="originalInvoiceFetchStatus" style="font-size:0.82rem;"></span>
           </div>
 
           <div class="client-details-form">
