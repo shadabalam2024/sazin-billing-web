@@ -38,10 +38,10 @@ const loginLimiter = rateLimit({
 
 // ── Default company settings ──
 const DEFAULT_SETTINGS = {
-  name: 'SAZIN TECH Pvt Ltd',
-  address: 'D-10, Industrial Area, New Siwan, Phase 1, Hardiya More, Opposite Paani Tanki, Siwan, Bihar — 841226',
-  gstin: '', stateName: 'Bihar', stateCode: '10',
-  phone: '', email: '', logoText: 'SAZIN',
+  name: 'Swift Software',
+  address: 'New Delhi',
+  gstin: '', stateName: 'Delhi', stateCode: '07',
+  phone: '', email: '', logoText: 'SS',
   bankName: '', bankAccount: '', bankIfsc: '', upi: '',
   declaration: 'Declaration: We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.',
   invoicePrefix: 'SAZIN', defaultHsn: '3925', defaultGstRate: 18,
