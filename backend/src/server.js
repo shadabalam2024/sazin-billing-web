@@ -1343,13 +1343,16 @@ app.get('/ledger', requireAdmin, async (req, res) => {
     const totalOutstanding = salesRows.reduce((s, r) => s + (r.outstanding || 0), 0);
     const totalExpenses = rows.filter(r => r.docType === 'expense').reduce((s, r) => s + r.debit, 0);
     const totalPurchases = rows.filter(r => r.docType === 'purchase').reduce((s, r) => s + r.debit, 0);
+    // Cash actually paid out on purchases (excludes unpaid payables — those haven't left your hand yet)
+    const totalPurchasesPaid = rows.filter(r => r.docType === 'purchase').reduce((s, r) => s + (r.amountPaid || 0), 0);
     const totalPayable = rows.filter(r => r.docType === 'purchase').reduce((s, r) => s + (r.outstanding || 0), 0);
 
     res.json({ success: true, rows,
       summary: { totalCredit: Math.round(totalCredit * 100) / 100, totalDebit: Math.round(totalDebit * 100) / 100,
         netBalance: Math.round(balance * 100) / 100, totalCollected: Math.round(totalCollected * 100) / 100,
         totalInvoiced: Math.round(totalInvoiced * 100) / 100, totalOutstanding: Math.round(totalOutstanding * 100) / 100,
-        totalPayable: Math.round(totalPayable * 100) / 100, totalExpenses, totalPurchases },
+        totalPayable: Math.round(totalPayable * 100) / 100, totalExpenses, totalPurchases,
+        totalPurchasesPaid: Math.round(totalPurchasesPaid * 100) / 100 },
       period: period || 'all', month: month || currentMonth, year: year || currentYear });
   } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });

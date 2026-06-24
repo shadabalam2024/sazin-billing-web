@@ -44,7 +44,8 @@ function loadLedger() {
 
 function renderLedgerSummary(s) {
   const netColor = s.netBalance >= 0 ? "#0a7c3e" : "#dc3545";
-  const cashNet = s.totalCollected - s.totalPurchases - s.totalExpenses;
+  // Cash in Hand = money actually received minus money actually paid out (excludes unpaid payables)
+  const cashNet = s.totalCollected - (s.totalPurchasesPaid ?? s.totalPurchases) - s.totalExpenses;
   const cashColor = cashNet >= 0 ? "#0a7c3e" : "#dc3545";
   document.getElementById("ledgerSummary").innerHTML = `
     <div class="ledger-stat">
