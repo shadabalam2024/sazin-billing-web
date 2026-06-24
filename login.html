@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SAZIN TECH - Login</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="config.js"></script>
+</head>
+<body>
+  <div class="login-wrapper">
+    <div class="login-box">
+      <div class="login-logo">
+        <h1>SAZIN TECH</h1>
+        <p>Pvt Ltd — Billing System</p>
+      </div>
+      <div id="loginError" class="login-error" style="display:none;"></div>
+      <div class="login-field">
+        <label>Username</label>
+        <input type="text" id="loginUsername" placeholder="Enter username" autocomplete="off">
+      </div>
+      <div class="login-field">
+        <label>Password</label>
+        <div class="password-wrapper">
+          <input type="password" id="loginPassword" placeholder="Enter password" onkeydown="if(event.key==='Enter') doLogin()">
+          <button class="toggle-pass" onclick="togglePassword()">👁</button>
+        </div>
+      </div>
+      <button class="btn green login-btn" onclick="doLogin()">Login</button>
+    </div>
+  </div>
+  <script>
+    const API = window.SAZIN_API_URL || "http://localhost:3000";
+    function doLogin() {
+      const username = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+      if (!username || !password) { showError("Please enter both username and password."); return; }
+      fetch(API + "/login", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      })
+        .then(res => res.json())
+        .then(result => {
+          if (result.success) {
+            sessionStorage.setItem("token", result.token);
+            sessionStorage.setItem("role", result.role);
+            sessionStorage.setItem("username", result.username);
+            sessionStorage.setItem("mustChangePassword", result.mustChangePassword ? "1" : "");
+            sessionStorage.setItem("permissions", JSON.stringify(result.permissions || null));
+            window.location.href = "index.html";
+          } else {
+            showError(result.message || "Invalid credentials.");
+            document.getElementById("loginPassword").value = "";
+          }
+        })
+        .catch(() => showError("Cannot reach server. Check your connection."));
+    }
+    function showError(msg) {
+      const el = document.getElementById("loginError");
+      el.textContent = msg; el.style.display = "block";
+      setTimeout(() => el.style.display = "none", 3500);
+    }
+    function togglePassword() {
+      const input = document.getElementById("loginPassword");
+      input.type = input.type === "password" ? "text" : "password";
+    }
+  </script>
+</body>
+</html>

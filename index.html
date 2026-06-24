@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SAZIN TECH - Billing</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="config.js"></script>
+</head>
+<body>
+  <div class="container">
+
+    <!-- DEFAULT PASSWORD BANNER -->
+    <div id="pwdBanner" class="pwd-banner" style="display:none">
+      ⚠️ You are still using the default password. Please change it now from the 🔑 button (top-right).
+    </div>
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+      <span id="welcomeUser" class="welcome-text"></span>
+      <div class="top-bar-actions">
+        <span id="roleTag" class="role-tag"></span>
+        <button class="btn yellow small-btn" onclick="showChangePassword()" id="changePwdBtn" style="display:none">🔑 Change Password</button>
+        <button class="btn red small-btn" onclick="logout()">🚪 Logout</button>
+      </div>
+    </div>
+
+    <div class="app-body">
+    <!-- TAB NAV (vertical sidebar) -->
+    <div class="tab-nav">
+      <button class="tab-btn" data-perm="dashboard" onclick="showTab('dashboard', this)">🏠 Dashboard</button>
+      <button class="tab-btn active" data-perm="billing" onclick="showTab('billing', this)">🧾 Billing</button>
+      <button class="tab-btn" data-perm="quotations" onclick="showTab('quotations', this)">📝 Quotations</button>
+      <button class="tab-btn" data-perm="clients" onclick="showTab('clients', this)">👥 Clients</button>
+      <button class="tab-btn" data-perm="inventory" onclick="showTab('inventory', this)">🏪 Inventory</button>
+      <button class="tab-btn" data-perm="purchases" onclick="showTab('purchases', this)">🛒 Purchases</button>
+      <button class="tab-btn" data-perm="expenses" onclick="showTab('expenses', this)">💸 Expenses</button>
+      <button class="tab-btn" data-perm="ledger" onclick="showTab('ledger', this)">📒 Ledger</button>
+      <button class="tab-btn" data-perm="analytics" onclick="showTab('analytics', this)">📊 Analytics</button>
+      <button class="tab-btn" data-perm="history" onclick="showTab('history', this)">🕘 History</button>
+      <button class="tab-btn" data-perm="backup" onclick="showTab('backup', this)">💾 Backup</button>
+      <button class="tab-btn admin-only" onclick="showTab('settings', this)">⚙️ Settings</button>
+    </div>
+    <div class="main-content">
+
+    <!-- =================== TAB: DASHBOARD =================== -->
+    <div id="tab-dashboard" class="tab-content">
+      <div class="dashboard-grid">
+        <div class="dash-section-title">📅 Today</div>
+        <div class="dash-cards" id="dashTodayCards"></div>
+        <div class="dash-section-title">📆 This Month</div>
+        <div class="dash-cards" id="dashMonthCards"></div>
+        <div class="dash-two-col">
+          <div class="card">
+            <h3 class="dash-sub-title">🕐 Recent Sales</h3>
+            <div id="dashRecentSales"></div>
+          </div>
+          <div class="card">
+            <h3 class="dash-sub-title">⚠️ Low Stock Alerts</h3>
+            <div id="dashLowStock"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== TAB: BILLING =================== -->
+    <div id="tab-billing" class="tab-content active">
+      <div id="billSection">
+        <header class="app-header">
+          <h1 id="hdrName">SAZIN TECH Pvt Ltd</h1>
+          <p id="hdrAddr"></p>
+          <p id="hdrGst" class="hdr-gst"></p>
+        </header>
+        <div class="card">
+          <div class="client-details-header">
+            <h2>Client Details</h2>
+            <span class="date-display" id="currentDate"></span>
+          </div>
+
+          <!-- Document Type + Invoice Number row -->
+          <div class="doctype-invoice-row">
+            <div class="doctype-select-wrap">
+              <label class="doctype-label">Document Type</label>
+              <select id="billDocType" class="doctype-select" onchange="onDocTypeChange()">
+                <option value="invoice">🧾 Tax Invoice</option>
+                <option value="proforma">📋 Proforma Invoice</option>
+                <option value="credit-note">➖ Credit Note</option>
+                <option value="debit-note">➕ Debit Note</option>
+              </select>
+            </div>
+            <div class="invoice-preview-bar" style="flex:1;">
+              <span class="invoice-label" id="docNumLabel">Invoice No:</span>
+              <span class="invoice-value" id="invoiceNumber">Loading...</span>
+            </div>
+          </div>
+
+          <!-- Against Invoice (for credit/debit notes) -->
+          <div id="originalInvoiceRow" style="display:none;margin-bottom:12px;display:none;align-items:center;gap:10px;flex-wrap:wrap;">
+            <label style="font-weight:600;white-space:nowrap;">Against Invoice No:</label>
+            <input id="originalInvoiceNo" placeholder="e.g. SAZIN/26-27/042" style="max-width:260px;margin:0;">
+          </div>
+
+          <div class="client-details-form">
+            <input id="name" placeholder="Enter client name">
+            <input id="mobile" placeholder="10-digit mobile (auto-fills known clients)">
+            <input id="address" placeholder="Enter address">
+          </div>
+          <div class="client-details-form" style="margin-top:10px;">
+            <input id="recipientGstin" placeholder="Client GSTIN (optional — leave blank if unregistered)">
+            <input id="placeOfSupplyState" placeholder="Place of supply — state (e.g. Bihar)">
+            <input id="placeOfSupplyStateCode" placeholder="State code (e.g. 10)" style="max-width:140px;">
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h2>Items</h2>
+            <div></div>
+          </div>
+          <div style="overflow-x:auto;">
+          <table id="measurements">
+            <thead>
+              <tr>
+                <th>Product Name</th><th>HSN</th><th>Length (mm)</th><th>Width (mm)</th>
+                <th>Unit</th><th>Qty</th><th>Billed</th><th>Rate</th><th>Disc %</th><th>GST %</th><th>Taxable</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          </div>
+          <div class="grand-total-container">
+            <div class="totals-block">
+              <div id="taxBreakup" class="tax-breakup"></div>
+              <div class="payment-status-row" style="margin:8px 0;">
+                <label style="font-weight:600;margin-right:8px;">Payment:</label>
+                <select id="billPaymentStatus" class="status-select" onchange="onBillPaymentChange()">
+                  <option value="unpaid">❌ Unpaid</option>
+                  <option value="partial">⚡ Partial</option>
+                  <option value="paid">✅ Paid</option>
+                </select>
+              </div>
+              <div id="partialAmountRow" style="display:none;align-items:center;gap:8px;margin:6px 0;">
+                <label style="font-weight:600;">Amount Paid: ₹</label>
+                <input type="number" id="billAmountPaid" placeholder="Enter amount" style="width:140px;margin:0;" oninput="updatePartialRemaining()">
+                <span id="billRemaining" style="color:#dc3545;font-weight:600;"></span>
+              </div>
+              <h3 id="grandTotal">Grand Total: ₹ 0.00</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button class="btn blue" onclick="addRow()">+ Add Row</button>
+        <button class="btn green" onclick="saveData()">💾 Save</button>
+        <button class="btn yellow" onclick="loadHistory()">📋 Load History</button>
+        <button class="btn blue" onclick="printBill()">🖨️ Print</button>
+        <button class="btn blue" onclick="savePDF()">📄 Save as PDF</button>
+        <button class="btn green" onclick="shareWhatsApp()">💬 WhatsApp</button>
+        <button class="btn blue" onclick="showEmailModal()">📧 Email</button>
+        <button class="btn yellow admin-only" onclick="showSaveTemplateModal()">💾 Template</button>
+        <button class="btn yellow" onclick="openLoadTemplateModal()">📂 Load Template</button>
+      </div>
+
+      <div class="card">
+        <h2>Search Entries</h2>
+        <div class="search-row">
+          <div class="search-group">
+            <input id="searchMobile" placeholder="10-digit mobile">
+            <button class="btn blue" onclick="searchByMobile()">Search by Mobile</button>
+          </div>
+          <div class="search-group">
+            <input id="searchInvoice" placeholder="e.g. SAZIN/26-27/001">
+            <button class="btn blue" onclick="searchByInvoice()">Search by Invoice</button>
+          </div>
+          <div class="search-group">
+            <input type="number" id="filterYear" placeholder="e.g. 2026">
+            <button class="btn blue" onclick="filterByYear()">Filter by Year</button>
+          </div>
+        </div>
+        <div id="searchResults"></div>
+      </div>
+    </div>
+
+    <!-- =================== TAB: QUOTATIONS =================== -->
+    <div id="tab-quotations" class="tab-content">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header-row">
+          <h2>📝 Create Quotation / Estimate</h2>
+          <div class="invoice-preview-bar" style="min-width:220px;">
+            <span class="invoice-label">Quote No:</span>
+            <span class="invoice-value" id="quoteNumber">Loading...</span>
+          </div>
+        </div>
+        <div class="client-details-form">
+          <input id="qName" placeholder="Client name">
+          <input id="qMobile" placeholder="10-digit mobile">
+          <input id="qAddress" placeholder="Address">
+        </div>
+        <div class="client-details-form" style="margin-top:10px;">
+          <input id="qGstin" placeholder="Client GSTIN (optional)">
+          <input id="qPlaceState" placeholder="Place of supply state">
+          <input id="qPlaceCode" placeholder="State code" style="max-width:140px;">
+        </div>
+        <div style="overflow-x:auto;margin-top:12px;">
+          <table id="qMeasurements">
+            <thead>
+              <tr>
+                <th>Product Name</th><th>HSN</th><th>Length (mm)</th><th>Width (mm)</th>
+                <th>Unit</th><th>Qty</th><th>Billed</th><th>Rate</th><th>Disc %</th><th>GST %</th><th>Taxable</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="grand-total-container">
+          <h3 id="quoteGrandTotal">Grand Total: ₹ 0.00</h3>
+        </div>
+        <div class="button-row" style="justify-content:flex-start;margin-top:10px;">
+          <button class="btn blue" onclick="addQuoteRow()">+ Add Row</button>
+          <button class="btn green" onclick="saveQuote()">💾 Save Quotation</button>
+          <button class="btn blue" onclick="printQuote()">🖨️ Print Quote</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header-row">
+          <h2>📋 Quotation History</h2>
+          <div style="display:flex;gap:8px;">
+            <select id="quoteStatusFilter" onchange="loadQuotes()" style="padding:6px;border:1px solid #ccc;border-radius:4px;font-size:0.85rem;">
+              <option value="">All Status</option>
+              <option value="open">Open</option>
+              <option value="converted">Converted</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div id="quoteHistory"></div>
+      </div>
+    </div>
+
+    <!-- =================== TAB: CLIENTS =================== -->
+    <div id="tab-clients" class="tab-content">
+      <div class="card">
+        <h2>👥 Client Profile</h2>
+        <div class="search-row">
+          <div class="search-group">
+            <input id="clientSearchMobile" placeholder="Enter client mobile number">
+            <button class="btn blue" onclick="loadClientProfile()">View Profile</button>
+          </div>
+        </div>
+        <div id="clientProfile"></div>
+      </div>
+    </div>
+
+    <!-- =================== TAB: INVENTORY =================== -->
+    <div id="tab-inventory" class="tab-content">
+      <div class="card">
+        <div class="card-header-row">
+          <h2>🏪 Inventory</h2>
+          <button class="btn green small-btn" onclick="openAddInventoryModal()">+ Add Product</button>
+        </div>
+        <div class="search-row" style="margin-bottom:12px;">
+          <input id="invSearchInput" placeholder="Search products..." oninput="filterInventoryTable()" style="flex:1;margin:0;">
+          <select id="invCategoryFilter" onchange="filterInventoryTable()" style="min-width:140px;">
+            <option value="">All Categories</option>
+          </select>
+        </div>
+        <div id="inventoryList"></div>
+      </div>
+    </div>
+
+    <!-- =================== TAB: PURCHASES =================== -->
+    <div id="tab-purchases" class="tab-content">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header-row"><h2>🛒 Record Purchase</h2></div>
+        <div class="settings-grid" style="margin-bottom:12px;">
+          <label>Supplier Name <input id="purchaseSupplier" placeholder="e.g. ABC Traders"></label>
+          <label>Supplier Bill No. <input id="purchaseBillNo" placeholder="e.g. INV-2025-001"></label>
+          <label>Supplier State <input id="purchaseSupplierState" placeholder="e.g. Bihar" oninput="updatePurchaseGrandTotal()"></label>
+          <label>Payment Status
+            <select id="purchasePayment" style="padding:8px;border:1px solid #ccc;border-radius:5px;font-size:0.95rem;" onchange="onPurchasePaymentChange()">
+              <option value="paid">✅ Paid</option>
+              <option value="unpaid">❌ Unpaid</option>
+              <option value="partial">⚡ Partial</option>
+            </select>
+          </label>
+          <label class="full">Notes <input id="purchaseNotes" placeholder="Optional notes"></label>
+        </div>
+        <div id="purchasePartialRow" style="display:none;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:12px 14px;margin-bottom:12px;">
+          <div style="font-weight:600;color:#e67e22;margin-bottom:10px;">⚡ Partial Payment Details</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <label style="flex:1;min-width:140px;margin:0;">Amount Paid ₹<input type="number" id="purchaseAmountPaid" placeholder="0.00" oninput="onPurchaseAmountPaidInput()" style="display:block;margin-top:4px;"></label>
+            <label style="flex:2;min-width:160px;margin:0;">Payment Note<input id="purchaseAmountNote" placeholder="e.g. Cash, UPI, Bank" style="display:block;margin-top:4px;"></label>
+            <label style="flex:1;min-width:140px;margin:0;">Date<input type="date" id="purchaseAmountDate" style="display:block;margin-top:4px;"></label>
+          </div>
+          <div id="purchaseRemainingDisplay" style="margin-top:8px;font-weight:600;color:#e67e22;font-size:0.9rem;"></div>
+        </div>
+        <h4 style="margin:0 0 6px;">Items Purchased</h4>
+        <div style="font-size:0.78rem;color:#888;margin-bottom:8px;display:flex;gap:16px;padding:0 4px;">
+          <span style="flex:2;min-width:130px;">Item Name</span>
+          <span style="flex:0.6;min-width:65px;">HSN</span>
+          <span style="flex:0.5;min-width:65px;">Qty</span>
+          <span style="flex:0.8;min-width:85px;">Cost/Unit ₹</span>
+          <span style="flex:0.4;min-width:58px;">GST %</span>
+          <span style="min-width:100px;">Line Total</span>
+        </div>
+        <div id="purchaseItemsContainer">
+          <div class="purchase-item-row">
+            <input class="pi-name" placeholder="Item name" style="flex:2;min-width:130px;margin:0;">
+            <input class="pi-hsn" placeholder="HSN" style="flex:0.6;min-width:65px;margin:0;">
+            <input class="pi-qty" type="number" placeholder="Qty" style="flex:0.5;min-width:65px;margin:0;">
+            <input class="pi-cost" type="number" placeholder="Cost/unit ₹" style="flex:0.8;min-width:85px;margin:0;">
+            <input class="pi-gst" type="number" placeholder="GST %" style="flex:0.4;min-width:58px;margin:0;" value="18">
+            <span class="pi-total" style="min-width:100px;line-height:38px;font-weight:600;color:#0078d7;">₹ 0.00</span>
+            <label class="pi-inv-toggle"><input type="checkbox" class="pi-inv-check"> 📦 Inventory</label>
+            <select class="pi-product" style="display:none;padding:8px;border:1px solid #ccc;border-radius:4px;min-width:180px;font-size:0.85rem;">
+              <option value="">-- Create new inventory entry --</option>
+            </select>
+            <button class="btn red small-btn" onclick="removePurchaseRow(this)" style="margin:0;">✕</button>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:10px;">
+          <button class="btn blue small-btn" onclick="addPurchaseRow()">+ Add Item</button>
+          <div style="text-align:right;">
+            <div id="purchaseGstBreakup" style="font-size:0.85rem;color:#555;line-height:1.8;margin-bottom:4px;"></div>
+            <div style="font-weight:700;font-size:1.05rem;color:#0078d7;">Grand Total: <span id="purchaseTotal">₹ 0.00</span></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <button class="btn green" onclick="savePurchase()">💾 Save Purchase</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>📋 Purchase History</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center;">
+          <input id="purchaseSearch" placeholder="Search supplier or notes…" style="flex:1;min-width:180px;" oninput="filterPurchases()">
+          <select id="purchaseStatusFilter" style="padding:8px;border:1px solid #ccc;border-radius:5px;font-size:0.9rem;" onchange="filterPurchases()">
+            <option value="">All Statuses</option>
+            <option value="paid">✅ Paid</option>
+            <option value="unpaid">❌ Unpaid</option>
+            <option value="partial">⚡ Partial</option>
+          </select>
+        </div>
+        <div id="purchaseHistory"></div>
+      </div>
+    </div>
+
+    <!-- ── EDIT PURCHASE MODAL ── -->
+    <div id="editPurchaseModal" class="modal-overlay" style="display:none;">
+      <div class="modal-box" style="max-width:720px;width:95%;max-height:90vh;overflow-y:auto;">
+        <h3 style="margin-bottom:16px;">✏️ Edit Purchase</h3>
+        <input type="hidden" id="editPurchaseId">
+        <div class="settings-grid" style="margin-bottom:12px;">
+          <label>Supplier Name <input id="editPurchaseSupplier" placeholder="Supplier name"></label>
+          <label>Supplier Bill No. <input id="editPurchaseBillNo" placeholder="e.g. INV-2025-001"></label>
+          <label class="full">Notes <input id="editPurchaseNotes" placeholder="Optional notes"></label>
+        </div>
+        <h4 style="margin:0 0 8px;">Items</h4>
+        <div id="editPurchaseItemsContainer"></div>
+        <div style="margin-top:8px;">
+          <button class="btn blue small-btn" onclick="addEditPurchaseRow()">+ Add Item</button>
+        </div>
+        <div style="text-align:right;font-weight:700;font-size:1.05rem;color:#0078d7;margin-top:10px;">Total: <span id="editPurchaseTotal">₹ 0.00</span></div>
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn green" onclick="submitEditPurchase()">💾 Save Changes</button>
+          <button class="btn" onclick="closeEditPurchaseModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ADD PURCHASE PAYMENT MODAL ── -->
+    <div id="addPurchasePaymentModal" class="modal-overlay" style="display:none;">
+      <div class="modal-box" style="max-width:420px;">
+        <h3 style="margin-bottom:12px;">💰 Record Payment</h3>
+        <input type="hidden" id="addPaymentPurchaseId">
+        <p id="addPaymentSupplierName" style="font-weight:600;font-size:1rem;margin-bottom:4px;"></p>
+        <p id="addPaymentSummary" style="color:#e67e22;font-weight:600;margin-bottom:16px;font-size:0.9rem;"></p>
+        <label style="display:block;margin-bottom:10px;">Amount Paid ₹
+          <input type="number" id="addPaymentAmount" placeholder="0.00" style="display:block;width:100%;margin-top:4px;box-sizing:border-box;">
+        </label>
+        <label style="display:block;margin-bottom:10px;">Note
+          <input id="addPaymentNote" placeholder="e.g. Cash, UPI, Bank transfer" style="display:block;width:100%;margin-top:4px;box-sizing:border-box;">
+        </label>
+        <label style="display:block;margin-bottom:18px;">Date
+          <input type="date" id="addPaymentDate" style="display:block;width:100%;margin-top:4px;box-sizing:border-box;">
+        </label>
+        <div style="display:flex;gap:10px;">
+          <button class="btn green" onclick="submitPurchasePayment()">💾 Record</button>
+          <button class="btn" onclick="closeAddPurchasePaymentModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INVOICE PAYMENT LOG MODAL ── -->
+    <div id="invoicePaymentModal" class="modal-overlay" style="display:none;">
+      <div class="modal-box" style="max-width:500px;width:95%;max-height:90vh;overflow-y:auto;">
+        <h3 style="margin-bottom:8px;">💰 Invoice Payments</h3>
+        <input type="hidden" id="invPayInvoiceNum">
+        <p id="invPayClient" style="font-weight:600;font-size:1rem;margin-bottom:4px;"></p>
+        <div id="invPaySummary" style="display:flex;gap:16px;flex-wrap:wrap;padding:8px 10px;background:#f8f9fa;border-radius:6px;font-size:0.88rem;margin-bottom:14px;"></div>
+        <div id="invPayLog" style="margin-bottom:16px;"></div>
+        <div style="border-top:1px solid #eee;padding-top:14px;">
+          <div style="font-weight:600;margin-bottom:10px;color:#0078d7;">+ Add Payment</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <label style="flex:1;min-width:120px;margin:0;">Amount ₹<input type="number" id="invPayAmount" placeholder="0.00" style="display:block;margin-top:4px;"></label>
+            <label style="flex:2;min-width:150px;margin:0;">Note<input id="invPayNote" placeholder="Cash, UPI, Bank…" style="display:block;margin-top:4px;"></label>
+            <label style="flex:1;min-width:130px;margin:0;">Date<input type="date" id="invPayDate" style="display:block;margin-top:4px;"></label>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:10px;">
+            <button class="btn green" onclick="submitInvoicePayment()">💾 Record</button>
+            <button class="btn" onclick="closeInvoicePaymentModal()">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RETURN / EXCHANGE MODAL ── -->
+    <div id="returnExchangeModal" class="modal-overlay" style="display:none;">
+      <div class="modal-box" style="max-width:680px;width:95%;max-height:90vh;overflow-y:auto;">
+        <h3 style="margin-bottom:8px;">↩ Return / Exchange</h3>
+        <p style="margin-bottom:4px;">Invoice: <strong id="returnOriginalInv"></strong> &nbsp;—&nbsp; <span id="returnClientName" style="color:#555;"></span></p>
+        <p style="color:#888;font-size:0.85rem;margin-bottom:14px;">Select items and quantities to return. Unchecked items will be excluded.</p>
+        <div id="returnItemsList" style="margin-bottom:14px;"></div>
+        <label style="display:block;margin-bottom:14px;">Return Reason / Note
+          <input id="returnNote" placeholder="e.g. Defective product, Wrong size" style="display:block;width:100%;margin-top:4px;box-sizing:border-box;">
+        </label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn green" onclick="submitReturn()">↩ Return Only (Credit Note)</button>
+          <button class="btn blue" onclick="submitExchange()">🔄 Exchange (Credit Note + New Invoice)</button>
+          <button class="btn" onclick="closeReturnExchangeModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== TAB: EXPENSES =================== -->
+    <div id="tab-expenses" class="tab-content">
+      <div class="card" style="margin-bottom:16px;">
+        <h2>💸 Add Expense</h2>
+        <div class="settings-grid">
+          <label>Category
+            <select id="expCategory" style="padding:8px;border:1px solid #ccc;border-radius:5px;font-size:0.95rem;">
+              <option>Rent</option><option>Electricity</option><option>Salaries</option>
+              <option>Transport</option><option>Maintenance</option><option>Marketing</option>
+              <option>Stationery</option><option>Other</option>
+            </select>
+          </label>
+          <label>Amount (₹) <input id="expAmount" type="number" placeholder="e.g. 5000"></label>
+          <label class="full">Description <input id="expDescription" placeholder="e.g. Monthly shop rent"></label>
+          <label class="full">Notes <input id="expNotes" placeholder="Optional"></label>
+        </div>
+        <div style="margin-top:12px;"><button class="btn green" onclick="saveExpense()">💾 Save Expense</button></div>
+      </div>
+      <div class="card">
+        <div class="card-header-row">
+          <h2>📋 Expense History</h2>
+          <select id="expFilterCategory" onchange="loadExpenses()" style="padding:6px;border:1px solid #ccc;border-radius:4px;font-size:0.85rem;">
+            <option value="">All Categories</option>
+            <option>Rent</option><option>Electricity</option><option>Salaries</option>
+            <option>Transport</option><option>Maintenance</option><option>Marketing</option>
+            <option>Stationery</option><option>Other</option>
+          </select>
+        </div>
+        <div id="expenseHistory"></div>
+      </div>
+    </div>
+
+    <!-- =================== TAB: ANALYTICS =================== -->
+    <div id="tab-analytics" class="tab-content">
+      <div class="card">
+        <div class="analytics-header">
+          <h2>📊 Reports & Analytics</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn green" onclick="exportToExcel()">⬇ Export CSV</button>
+            <button class="btn blue" onclick="exportTally()">📒 Tally Export</button>
+          </div>
+        </div>
+        <div class="analytics-section"><h3>📅 Today's Report</h3><div id="dailyReport" class="stat-row"></div></div>
+        <div class="analytics-section"><h3>📆 Yearly Revenue</h3><div id="yearlyReport"></div></div>
+        <div class="analytics-section"><h3>📈 Monthly Revenue</h3><div id="monthlyReport"></div></div>
+        <div class="analytics-section"><h3>🏆 Top Clients by Revenue</h3><div id="topClientsReport"></div></div>
+
+        <!-- GST Return Report -->
+        <div class="analytics-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+            <h3 style="margin:0;">🧾 GST Return Report (GSTR-1 / GSTR-3B)</h3>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <input type="month" id="gstReportMonth" style="padding:6px;border:1px solid #ccc;border-radius:4px;font-size:0.85rem;">
+              <button class="btn blue small-btn" onclick="loadGSTReport()">Generate</button>
+              <button class="btn green small-btn" onclick="exportGSTReportCSV()">⬇ Export</button>
+            </div>
+          </div>
+          <div id="gstReportContent"></div>
+        </div>
+
+        <!-- Item-wise Profitability -->
+        <div class="analytics-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h3 style="margin:0;">💹 Item-wise Profitability</h3>
+            <button class="btn blue small-btn" onclick="loadProfitability()">Refresh</button>
+          </div>
+          <div id="profitabilityReport"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== TAB: LEDGER =================== -->
+    <div id="tab-ledger" class="tab-content">
+      <div class="card">
+        <div class="ledger-header">
+          <h2>📒 Ledger</h2>
+          <button class="btn green small-btn" onclick="exportLedgerCSV()">⬇ Export CSV</button>
+        </div>
+
+        <!-- Period selector -->
+        <div class="ledger-period-bar">
+          <button class="ledger-period-btn active" id="ledgerBtn-month" onclick="setLedgerPeriod('month',this)">This Month</button>
+          <button class="ledger-period-btn" id="ledgerBtn-year"  onclick="setLedgerPeriod('year',this)">This Year</button>
+          <button class="ledger-period-btn" id="ledgerBtn-all"   onclick="setLedgerPeriod('all',this)">All Time</button>
+
+          <!-- Custom month -->
+          <span class="ledger-custom-sep">|</span>
+          <label style="font-size:0.82rem;font-weight:600;color:#555;">Month:</label>
+          <input type="month" id="ledgerCustomMonth" onchange="setLedgerPeriod('month',null,{month:this.value})"
+            style="padding:5px 8px;border:1px solid #ccc;border-radius:5px;font-size:0.85rem;">
+
+          <!-- Custom year -->
+          <label style="font-size:0.82rem;font-weight:600;color:#555;">Year:</label>
+          <input type="number" id="ledgerCustomYear" placeholder="YYYY" min="2020" max="2099"
+            style="width:80px;padding:5px 8px;border:1px solid #ccc;border-radius:5px;font-size:0.85rem;"
+            onchange="setLedgerPeriod('year',null,{year:this.value})">
+        </div>
+
+        <!-- Summary cards -->
+        <div id="ledgerSummary" class="ledger-summary-row"></div>
+
+        <!-- Type filter -->
+        <div class="ledger-filter-bar">
+          <label style="font-size:0.82rem;font-weight:600;color:#555;">Show:</label>
+          <select id="ledgerTypeFilter" onchange="applyLedgerFilter()" style="padding:5px 10px;border:1px solid #ccc;border-radius:5px;font-size:0.85rem;">
+            <option value="">All Transactions</option>
+            <option value="Sale">Sales (Invoices)</option>
+            <option value="Credit Note">Credit Notes</option>
+            <option value="Debit Note">Debit Notes</option>
+            <option value="Purchase">Purchases</option>
+            <option value="Expense">Expenses</option>
+          </select>
+          <span id="ledgerRowCount" style="font-size:0.82rem;color:#888;"></span>
+        </div>
+
+        <!-- Ledger table -->
+        <div id="ledgerTableWrap" style="overflow-x:auto;margin-top:8px;">
+          <p style="color:#888;">Select a period above to load the ledger.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================== TAB: HISTORY =================== -->
+    <div id="tab-history" class="tab-content">
+      <div class="card">
+        <div class="card-header-row">
+          <h2>🕘 Document History</h2>
+        </div>
+        <div class="search-row" style="margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <input id="historySearch" placeholder="Search by name, mobile, doc number..." style="flex:2;min-width:200px;" oninput="filterHistory()">
+          <select id="historyTypeFilter" onchange="filterHistory()" style="min-width:140px;">
+            <option value="">All Types</option>
+            <option value="invoice">Invoice</option>
+            <option value="proforma">Proforma</option>
+            <option value="quote">Quotation</option>
+            <option value="credit-note">Credit Note</option>
+            <option value="debit-note">Debit Note</option>
+          </select>
+          <select id="historyStatusFilter" onchange="filterHistory()" style="min-width:130px;">
+            <option value="">All Statuses</option>
+            <option value="paid">Paid</option>
+            <option value="partial">Partial</option>
+            <option value="unpaid">Unpaid</option>
+          </select>
+        </div>
+        <div id="historyList"></div>
+      </div>
+    </div>
+
+    <!-- =================== TAB: BACKUP =================== -->
+    <div id="tab-backup" class="tab-content">
+      <div class="card">
+        <h2>💾 Backup & Restore</h2>
+        <p style="color:#666;margin-bottom:20px;">Export all invoice data (plus settings, catalog, quotes & templates) as a JSON file, or restore from a backup.</p>
+        <div class="backup-section">
+          <div class="backup-box">
+            <h3>⬇ Export Backup</h3>
+            <p>Download all records as a <code>.json</code> file.</p>
+            <button class="btn green" onclick="exportBackup()">Export Backup</button>
+          </div>
+          <div class="backup-box">
+            <h3>⬆ Restore Backup</h3>
+            <p>Upload a previously exported backup file to restore data.</p>
+            <input type="file" id="restoreFile" accept=".json" style="margin-bottom:10px;">
+            <button class="btn yellow" onclick="restoreBackup()">Restore from File</button>
+          </div>
+        </div>
+        <div id="backupStatus"></div>
+      </div>
+    </div>
+
+    <!-- =================== TAB: SETTINGS =================== -->
+    <div id="tab-settings" class="tab-content">
+      <div class="card" style="margin-bottom:16px;">
+        <h2>⚙️ Company Profile & Invoice Settings</h2>
+        <p style="color:#666;margin-bottom:16px;">These details appear on every GST tax invoice. Fill the GSTIN and bank details before issuing invoices.</p>
+        <div class="settings-grid">
+          <label>Company Name <input id="setName"></label>
+          <label>GSTIN <input id="setGstin" placeholder="e.g. 10ABCDE1234F1Z5"></label>
+          <label class="full">Address <input id="setAddress"></label>
+          <label>State Name <input id="setStateName"></label>
+          <label>State Code <input id="setStateCode" placeholder="e.g. 10"></label>
+          <label>Phone <input id="setPhone"></label>
+          <label>Email <input id="setEmail"></label>
+          <label>Logo Text (short) <input id="setLogoText" maxlength="10"></label>
+          <label>Invoice Prefix <input id="setInvoicePrefix" placeholder="e.g. SAZIN"></label>
+          <label>Default HSN <input id="setDefaultHsn" placeholder="3925"></label>
+          <label>Default GST % <input id="setDefaultGstRate" type="number"></label>
+          <label>Bank Name <input id="setBankName"></label>
+          <label>Bank A/C No <input id="setBankAccount"></label>
+          <label>IFSC <input id="setBankIfsc"></label>
+          <label>UPI ID <input id="setUpi"></label>
+          <label class="full">Declaration / Terms <textarea id="setDeclaration" rows="2"></textarea></label>
+        </div>
+        <div style="margin-top:14px;"><button class="btn green" onclick="saveSettings()">💾 Save Settings</button></div>
+      </div>
+
+      <!-- SMTP / Email Settings -->
+      <div class="card" style="margin-bottom:16px;">
+        <h2>📧 Email / SMTP Settings</h2>
+        <p style="color:#666;margin-bottom:16px;">Configure SMTP to enable one-click email delivery of invoices. Works with Gmail (app password), Outlook, or any SMTP provider.</p>
+        <div id="smtpConfigBadge" style="margin-bottom:12px;"></div>
+        <div class="settings-grid">
+          <label>SMTP Host <input id="setSmtpHost" placeholder="e.g. smtp.gmail.com"></label>
+          <label>SMTP Port <input id="setSmtpPort" type="number" placeholder="587"></label>
+          <label>SMTP Username <input id="setSmtpUser" placeholder="your@email.com"></label>
+          <label>SMTP Password <input id="setSmtpPass" type="password" placeholder="Leave blank to keep existing"></label>
+          <label>From Name/Email <input id="setSmtpFrom" placeholder="e.g. billing@yourcompany.com"></label>
+        </div>
+        <div style="margin-top:14px;"><button class="btn green" onclick="saveSmtpSettings()">💾 Save Email Settings</button></div>
+      </div>
+
+      <!-- User Management -->
+      <div class="card">
+        <div class="card-header-row">
+          <h2>👤 User Management</h2>
+          <button class="btn green small-btn" onclick="showAddUserModal()">+ Add User</button>
+        </div>
+        <p style="color:#666;margin-bottom:16px;">Manage team accounts. Admin can see everything; Staff can create invoices and quotes only.</p>
+        <div id="userList"></div>
+      </div>
+    </div>
+
+    </div><!-- /main-content -->
+    </div><!-- /app-body -->
+
+    <!-- ADD/EDIT INVENTORY MODAL -->
+    <div id="inventoryModal" class="modal-overlay" style="display:none">
+      <div class="modal-box modal-inv">
+        <div class="modal-inv-header">
+          <div class="modal-inv-title">
+            <span class="modal-inv-icon" id="inventoryModalIcon">+</span>
+            <h3 id="inventoryModalTitle">Add Product</h3>
+          </div>
+          <button class="modal-close-btn" onclick="closeInventoryModal()">✕</button>
+        </div>
+        <input type="hidden" id="invEditId">
+        <div class="settings-grid inv-modal-grid">
+          <label class="full">Product Name <input id="invName" placeholder="e.g. UPVC Window Frame"></label>
+          <label>Category <input id="invCategory" placeholder="e.g. Windows, Pipes"></label>
+          <label>Unit
+            <select id="invUnit" style="padding:9px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.92rem;background:#fff;">
+              <option>Piece</option><option>Sq.Ft</option><option>R.Ft</option><option>Kg</option><option>Litre</option><option>Box</option><option>Roll</option>
+            </select>
+          </label>
+          <label>HSN Code <input id="invHsn" placeholder="e.g. 3925"></label>
+          <label>Cost Price (₹) <input id="invCostPrice" type="number" placeholder="Your buying price"></label>
+          <label>Selling Price (₹) <input id="invSellingPrice" type="number" placeholder="Your selling price"></label>
+          <label>Opening Stock <input id="invStockQty" type="number" placeholder="Current quantity"></label>
+          <label>Low Stock Alert at <input id="invLowStockAlert" type="number" placeholder="e.g. 5"></label>
+        </div>
+        <div class="modal-actions modal-inv-actions">
+          <button class="btn green modal-save-btn" onclick="submitInventoryModal()">Save Product</button>
+          <button class="btn btn-cancel" onclick="closeInventoryModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDIT INVOICE MODAL -->
+    <div id="editModal" class="modal-overlay" style="display:none">
+      <div class="modal-box modal-large">
+        <h3>✏️ Edit Invoice</h3>
+        <div class="client-details-form" style="margin-bottom:12px">
+          <input type="text" id="editName"    placeholder="Client name">
+          <input type="text" id="editMobile"  placeholder="10-digit mobile">
+          <input type="text" id="editAddress" placeholder="Address">
+        </div>
+        <div style="overflow-x:auto;">
+        <table id="editMeasurements" style="margin-bottom:10px">
+          <thead><tr>
+            <th>Description</th><th>HSN</th><th>Length</th><th>Width</th><th>Unit</th>
+            <th>Qty</th><th>Billed</th><th>Rate</th><th>Disc %</th><th>GST %</th><th>Taxable</th><th>Action</th>
+          </tr></thead>
+          <tbody id="editMeasurementsTbody"></tbody>
+        </table>
+        </div>
+        <button class="btn blue small-btn" onclick="addEditRow(document.getElementById('editMeasurementsTbody'))">+ Add Row</button>
+        <div class="grand-total-container"><h3 id="editGrandTotal">Grand Total: ₹ 0.00</h3></div>
+        <div class="modal-actions">
+          <button class="btn green" onclick="submitEdit()">Save Changes</button>
+          <button class="btn" onclick="closeEditModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD STOCK MODAL -->
+    <div id="addStockModal" class="modal-overlay" style="display:none">
+      <div class="modal-box" style="max-width:380px;">
+        <h3 style="margin-bottom:16px;">➕ Add Stock</h3>
+        <input type="hidden" id="addStockItemId">
+        <p id="addStockItemName" style="font-weight:600;color:#333;margin-bottom:4px;"></p>
+        <p id="addStockCurrentQty" style="color:#888;font-size:0.87rem;margin-bottom:14px;"></p>
+        <label style="font-weight:600;">Quantity to Add</label>
+        <input type="number" id="addStockQty" min="0.01" step="0.01" placeholder="Enter quantity" style="width:100%;margin:8px 0 16px;">
+        <div style="display:flex;gap:10px;">
+          <button class="btn green" onclick="submitAddStock()" style="flex:1;">Add Stock</button>
+          <button class="btn" onclick="closeAddStockModal()" style="flex:1;">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHANGE PASSWORD MODAL -->
+    <div id="changePwdModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+        <h3>🔑 Change Password</h3>
+        <div id="changePwdError" class="login-error" style="display:none"></div>
+        <div class="login-field"><label>Username</label><input type="text" id="cpUsername" placeholder="Username" readonly></div>
+        <div class="login-field"><label>Current Password</label><input type="password" id="cpOldPassword" placeholder="Current password"></div>
+        <div class="login-field"><label>New Password</label><input type="password" id="cpNewPassword" placeholder="New password (min 6 chars)"></div>
+        <div class="modal-actions">
+          <button class="btn green" onclick="submitChangePassword()">Save</button>
+          <button class="btn" onclick="closeChangePassword()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- OUTSTANDING MODAL -->
+    <div id="outstandingModal" class="modal-overlay" style="display:none">
+      <div class="modal-box modal-large">
+        <h3 id="outstandingTitle">Outstanding Dues</h3>
+        <div id="outstandingBody" style="max-height:60vh;overflow-y:auto;margin:16px 0;"></div>
+        <div class="modal-actions"><button class="btn" onclick="closeOutstandingModal()">Close</button></div>
+      </div>
+    </div>
+
+    <!-- EMAIL MODAL -->
+    <div id="emailModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+        <h3>📧 Email Invoice</h3>
+        <div id="emailModalError" class="login-error" style="display:none"></div>
+        <div class="login-field">
+          <label>Recipient Email</label>
+          <input type="email" id="emailRecipient" placeholder="client@example.com">
+        </div>
+        <p id="emailDocLabel" style="color:#666;font-size:0.85rem;margin-bottom:12px;"></p>
+        <div class="modal-actions">
+          <button class="btn green" onclick="submitEmailInvoice()">Send Email</button>
+          <button class="btn" onclick="closeEmailModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAVE TEMPLATE MODAL -->
+    <div id="saveTemplateModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+        <h3>💾 Save as Template</h3>
+        <p style="color:#666;margin-bottom:12px;">Save the current items as a reusable template for quick billing.</p>
+        <div class="login-field">
+          <label>Template Name</label>
+          <input type="text" id="templateName" placeholder="e.g. Standard UPVC Window Set">
+        </div>
+        <div class="login-field">
+          <label>Notes (optional)</label>
+          <input type="text" id="templateNotes" placeholder="Short description">
+        </div>
+        <div class="modal-actions">
+          <button class="btn green" onclick="submitSaveTemplate()">Save Template</button>
+          <button class="btn" onclick="closeSaveTemplateModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOAD TEMPLATE MODAL -->
+    <div id="loadTemplateModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+        <h3>📂 Load Template</h3>
+        <p style="color:#666;margin-bottom:12px;">Pick a saved template to pre-fill the item rows.</p>
+        <div id="templatePickerList"></div>
+        <div class="modal-actions"><button class="btn" onclick="closeLoadTemplateModal()">Close</button></div>
+      </div>
+    </div>
+
+    <!-- ADD USER MODAL -->
+    <div id="addUserModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+        <h3 id="addUserModalTitle">👤 Add User</h3>
+        <div id="addUserError" class="login-error" style="display:none"></div>
+        <input type="hidden" id="editingUsername">
+        <div class="login-field"><label>Username</label><input type="text" id="newUsername" placeholder="e.g. ravi_sales"></div>
+        <div class="login-field">
+          <label>Role</label>
+          <select id="newUserRole" onchange="onUserRoleChange()" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;font-size:0.95rem;">
+            <option value="staff">Staff (custom tab access)</option>
+            <option value="admin">Admin (full access)</option>
+          </select>
+        </div>
+        <div id="userPermissionsSection" style="margin-top:10px;">
+          <label style="font-weight:600;display:block;margin-bottom:8px;color:#333;">Tab Access</label>
+          <div class="perm-grid">
+            <label class="perm-item"><input type="checkbox" name="perm" value="billing"> 🧾 Billing</label>
+            <label class="perm-item"><input type="checkbox" name="perm" value="quotations"> 📝 Quotations</label>
+            <label class="perm-item"><input type="checkbox" name="perm" value="clients"> 👥 Clients</label>
+            <label class="perm-item"><input type="checkbox" name="perm" value="inventory"> 🏪 Inventory</label>
+            <label class="perm-item"><input type="checkbox" name="perm" value="purchases"> 🛒 Purchases</label>
+            <label class="perm-item"><input type="checkbox" name="perm" value="expenses"> 💸 Expenses</label>
+            <label class="perm-item"><input type="checkbox" name="perm" value="ledger"> 📒 Ledger</label>
+            <label class="perm-item"><input type="checkbox" name="perm" value="analytics"> 📊 Analytics</label>
+            <label class="perm-item"><input type="checkbox" name="perm" value="history"> 🕘 History</label>
+            <label class="perm-item"><input type="checkbox" name="perm" value="dashboard"> 🏠 Dashboard</label>
+            <label class="perm-item"><input type="checkbox" name="perm" value="backup"> 💾 Backup</label>
+          </div>
+        </div>
+        <div class="login-field" style="margin-top:10px;"><label id="newPasswordLabel">Password (min 6 chars)</label><input type="password" id="newUserPassword" placeholder="Password"></div>
+        <div class="modal-actions">
+          <button class="btn green" onclick="submitAddUser()">Save User</button>
+          <button class="btn" onclick="closeAddUserModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- core must load first (globals, apiFetch, esc, money, toast) -->
+  <script src="js/core.js"></script>
+  <!-- settings before auth (auth DOMContentLoaded calls loadSettings) -->
+  <script src="js/settings.js"></script>
+  <!-- autocomplete before billing/quotations (they call _buildProductCell, attachProductAutocomplete) -->
+  <script src="js/autocomplete.js"></script>
+  <!-- billing before print (print calls getBillingLines, grandTotalValue) -->
+  <script src="js/billing.js"></script>
+  <!-- clients before analytics/history (analytics calls loadClientProfile, history calls refreshAffectedSections) -->
+  <script src="js/clients.js"></script>
+  <!-- print after billing and clients (calls quickTotals, getBillingLines) -->
+  <script src="js/print.js"></script>
+  <!-- quotations after autocomplete and billing (calls calcBilled, _buildProductCell) -->
+  <script src="js/quotations.js"></script>
+  <!-- history after clients (calls refreshAffectedSections) -->
+  <script src="js/history.js"></script>
+  <!-- analytics after clients (calls loadClientProfile, openWhatsApp) -->
+  <script src="js/analytics.js"></script>
+  <!-- remaining modules (no cross-dependencies) -->
+  <script src="js/dashboard.js"></script>
+  <script src="js/inventory.js"></script>
+  <script src="js/purchases.js"></script>
+  <script src="js/expenses.js"></script>
+  <script src="js/ledger.js"></script>
+  <script src="js/backup.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/password.js"></script>
+  <!-- auth last: DOMContentLoaded references all other modules -->
+  <script src="js/auth.js"></script>
+</body>
+</html>
