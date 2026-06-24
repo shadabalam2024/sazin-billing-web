@@ -119,7 +119,7 @@ function submitEmailInvoice() {
   if (!recipientEmail || !/^[^@]+@[^@]+\.[^@]+$/.test(recipientEmail)) { errEl.textContent = "Please enter a valid email address."; errEl.style.display = "block"; return; }
   if (!_emailRecord) { errEl.textContent = "No document to send."; errEl.style.display = "block"; return; }
   errEl.style.display = "none";
-  apiFetch("/email-invoice", { method: "POST", body: JSON.stringify({ record: _emailRecord, recipientEmail }) })
+  apiFetch("/email-invoice", { method: "POST", body: JSON.stringify({ invoiceNumber: _emailRecord.invoiceNumber, recipientEmail }) })
     .then(res => res.json()).then(result => {
       if (result.success) { showSuccess(`Invoice emailed to ${recipientEmail}!`); closeEmailModal(); }
       else { errEl.textContent = result.message; errEl.style.display = "block"; }

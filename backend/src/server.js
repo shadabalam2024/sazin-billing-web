@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const supabase = require('./db');
 const { issueToken, requireAuth, requireAdmin } = require('./auth');
@@ -13,13 +15,26 @@ try { nodemailer = require('nodemailer'); } catch (e) { console.warn('nodemailer
 
 const app = express();
 
-const allowedOrigin = process.env.CORS_ORIGIN || true;
+// Security headers (X-Frame-Options, X-Content-Type-Options, HSTS, etc.)
+app.use(helmet());
+
+// CORS — strict: only allow the configured origin; deny all others if not set
+const allowedOrigin = process.env.CORS_ORIGIN || false;
 app.use(cors({
   origin: allowedOrigin,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'x-auth-token']
 }));
 app.use(express.json({ limit: '5mb' }));
+
+// Rate limit login: max 10 attempts per 15 minutes per IP
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many login attempts. Please try again in 15 minutes.' }
+});
 
 // ── Default company settings ──
 const DEFAULT_SETTINGS = {
@@ -196,7 +211,7 @@ function salesRecords(records) {
 
 // ════════════════════ AUTH ════════════════════
 
-app.post('/login', async (req, res) => {
+app.post('/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body || {};
     const { data: users } = await supabase.from('users').select('*').eq('username', username).limit(1);
@@ -206,7 +221,7 @@ app.post('/login', async (req, res) => {
     const token = issueToken({ username: user.username, role: user.role, permissions: user.permissions });
     const permissions = user.role === 'admin' ? null : (user.permissions || ['billing', 'quotations', 'clients']);
     res.json({ success: true, token, role: user.role, username: user.username, mustChangePassword: !!user.must_change_password, permissions });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.post('/logout', requireAuth, (req, res) => {
@@ -227,7 +242,7 @@ app.post('/change-password', requireAuth, async (req, res) => {
       return res.json({ success: false, message: 'New password must be at least 6 characters.' });
     await supabase.from('users').update({ password_hash: bcrypt.hashSync(newPassword, 10), must_change_password: false }).eq('username', username);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ SETTINGS ════════════════════
@@ -238,7 +253,7 @@ app.get('/settings', requireAuth, async (req, res) => {
     const { smtpPass, ...pub } = s;
     pub.smtpConfigured = !!(s.smtpHost && s.smtpUser && smtpPass);
     res.json(pub);
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.post('/settings', requireAdmin, async (req, res) => {
@@ -251,7 +266,7 @@ app.post('/settings', requireAdmin, async (req, res) => {
     if (!incoming.smtpPass) merged.smtpPass = current.smtpPass || '';
     await writeSettings(merged);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ NEXT DOCUMENT NUMBER (preview — does NOT consume) ════
@@ -269,7 +284,7 @@ app.get('/next-invoice', requireAuth, async (req, res) => {
     const state = counter ? { fyLabel: counter.fy_label, lastSeq: counter.last_seq } : {};
     const { number } = nextInvoiceNumber(state, prefix);
     res.json({ nextInvoice: number });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.get('/next-quote', requireAuth, async (req, res) => {
@@ -278,7 +293,7 @@ app.get('/next-quote', requireAuth, async (req, res) => {
     const state = counter ? { fyLabel: counter.fy_label, lastSeq: counter.last_seq } : {};
     const { number } = nextInvoiceNumber(state, 'QUOTE');
     res.json({ nextQuote: number });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ COMPUTE (live GST preview) ════════════════════
@@ -367,7 +382,7 @@ app.post('/save', requireAuth, async (req, res) => {
     }
 
     res.json({ success: true, invoiceNumber });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ SINGLE RECORD ════════════════════
@@ -377,7 +392,7 @@ app.get('/record/:invoiceNumber', requireAuth, async (req, res) => {
     const { data, error } = await supabase.from('documents').select('*').eq('invoice_number', req.params.invoiceNumber).single();
     if (error || !data) return res.status(404).json({ success: false, message: 'Record not found.' });
     res.json({ success: true, record: toRecord(data) });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ HISTORY ════════════════════
@@ -392,7 +407,7 @@ app.get('/history', requireAuth, async (req, res) => {
       return { ...r, grandTotal: grandTotalOf(r, s) };
     });
     res.json(records);
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ EDIT ════════════════════
@@ -415,7 +430,7 @@ app.post('/edit/:invoiceNumber', requireAdmin, async (req, res) => {
     }).eq('invoice_number', req.params.invoiceNumber);
 
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ DELETE ════════════════════
@@ -454,7 +469,7 @@ app.delete('/delete/:invoiceNumber', requireAdmin, async (req, res) => {
 
     await supabase.from('documents').delete().eq('invoice_number', req.params.invoiceNumber);
     res.json({ success: true, stockRestored });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ PAYMENT STATUS ════════════════════
@@ -466,7 +481,7 @@ app.post('/payment-status/:invoiceNumber', requireAdmin, async (req, res) => {
       amount_paid: parseFloat(req.body.amountPaid) || 0
     }).eq('invoice_number', req.params.invoiceNumber);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ INVOICE PAYMENT LOG ════════════════════
@@ -499,7 +514,7 @@ app.post('/invoices/:invoiceNumber/payments', requireAdmin, async (req, res) => 
 
     await supabase.from('documents').update({ payments: newPayments, amount_paid: newAmountPaid, payment_status: newStatus }).eq('invoice_number', req.params.invoiceNumber);
     res.json({ success: true, amountPaid: newAmountPaid, paymentStatus: newStatus });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.delete('/invoices/:invoiceNumber/payments/:paymentId', requireAdmin, async (req, res) => {
@@ -517,7 +532,7 @@ app.delete('/invoices/:invoiceNumber/payments/:paymentId', requireAdmin, async (
 
     await supabase.from('documents').update({ payments: newPayments, amount_paid: newAmountPaid, payment_status: newStatus }).eq('invoice_number', req.params.invoiceNumber);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ SEARCH ════════════════════
@@ -526,14 +541,14 @@ app.get('/search/:mobile', requireAuth, async (req, res) => {
   try {
     const { data } = await supabase.from('documents').select('*').eq('mobile', req.params.mobile);
     res.json((data || []).map(toRecord));
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.get('/search-invoice/:invoice', requireAuth, async (req, res) => {
   try {
     const { data } = await supabase.from('documents').select('*').ilike('invoice_number', `%${req.params.invoice}%`);
     res.json((data || []).map(toRecord));
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.post('/update-notes', requireAuth, async (req, res) => {
@@ -541,7 +556,7 @@ app.post('/update-notes', requireAuth, async (req, res) => {
     const { mobile, notes } = req.body;
     await supabase.from('documents').update({ notes }).eq('mobile', mobile);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.get('/client/:mobile', requireAuth, async (req, res) => {
@@ -559,7 +574,7 @@ app.get('/client/:mobile', requireAuth, async (req, res) => {
       notesArr = [{ id: Date.now().toString(), text: rawNotes.trim(), done: false, createdAt: new Date().toISOString() }];
     res.json({ found: true, name: records[0].name, mobile: records[0].mobile, address: records[0].address,
       notes: notesArr, totalBusiness, invoiceCount: invoiceRecords.length, invoices: records });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.get('/client-autofill/:mobile', requireAuth, async (req, res) => {
@@ -568,7 +583,7 @@ app.get('/client-autofill/:mobile', requireAuth, async (req, res) => {
     if (!data || !data.length) return res.json({ found: false });
     const r = data[0];
     res.json({ found: true, name: r.name, address: r.address, recipientGstin: r.recipient_gstin || '' });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ RENDER INVOICE ════════════════════
@@ -606,7 +621,7 @@ app.get('/outstanding', requireAuth, async (req, res) => {
       return { ...r, grandTotal, amountPaid, remaining: Math.max(0, grandTotal - amountPaid) };
     });
     res.json(records);
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ ANALYTICS ════════════════════
@@ -638,7 +653,7 @@ app.get('/analytics', requireAdmin, async (req, res) => {
     res.json({ monthly: monthlyMap, yearly: yearlyMap, monthlyOutstanding, yearlyOutstanding,
       topClients: Object.values(clientMap).sort((a, b) => b.total - a.total).slice(0, 10),
       daily: { date: today, invoiceCount: dailyRecords.length, total: dailyTotal }, unpaidTotal });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ CATALOG ════════════════════
@@ -647,7 +662,7 @@ app.get('/catalog', requireAuth, async (req, res) => {
   try {
     const { data } = await supabase.from('catalog').select('*').order('name');
     res.json((data || []).map(c => ({ id: c.id, name: c.name, cost: parseFloat(c.cost), hsn: c.hsn || '', unit: c.unit || 'Sq.Ft' })));
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.post('/catalog', requireAdmin, async (req, res) => {
@@ -658,14 +673,14 @@ app.post('/catalog', requireAdmin, async (req, res) => {
     const { data, error } = await supabase.from('catalog').insert({ name, cost: parseFloat(cost), hsn: hsn || s.defaultHsn, unit: unit || 'Sq.Ft' }).select('id').single();
     if (error) throw new Error(error.message);
     res.json({ success: true, id: data.id });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.delete('/catalog/:id', requireAdmin, async (req, res) => {
   try {
     await supabase.from('catalog').delete().eq('id', req.params.id);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ BACKUP / RESTORE ════════════════════
@@ -685,7 +700,7 @@ app.get('/backup', requireAdmin, async (req, res) => {
       settings, catalog: catalog || [],
       exportDate: new Date().toISOString()
     });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.post('/restore', requireAdmin, async (req, res) => {
@@ -714,7 +729,7 @@ app.post('/restore', requireAdmin, async (req, res) => {
       }
     }
     res.json({ success: true, count: data.length });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ INVENTORY ════════════════════
@@ -723,7 +738,7 @@ app.get('/inventory', requireAuth, async (req, res) => {
   try {
     const { data } = await supabase.from('inventory').select('*').order('name');
     res.json((data || []).map(toInventory));
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.post('/inventory', requireAdmin, async (req, res) => {
@@ -737,7 +752,7 @@ app.post('/inventory', requireAdmin, async (req, res) => {
     }).select('id').single();
     if (error) throw new Error(error.message);
     res.json({ success: true, id: data.id });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.put('/inventory/:id', requireAdmin, async (req, res) => {
@@ -753,14 +768,14 @@ app.put('/inventory/:id', requireAdmin, async (req, res) => {
     if (req.body.lowStockAlert != null) updates.low_stock_alert = parseFloat(req.body.lowStockAlert) || 5;
     await supabase.from('inventory').update(updates).eq('id', req.params.id);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.delete('/inventory/:id', requireAdmin, async (req, res) => {
   try {
     await supabase.from('inventory').delete().eq('id', req.params.id);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ PURCHASES ════════════════════
@@ -769,7 +784,7 @@ app.get('/purchases', requireAuth, async (req, res) => {
   try {
     const { data } = await supabase.from('purchases').select('*').order('date', { ascending: false });
     res.json((data || []).map(toPurchase));
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.post('/purchases', requireAdmin, async (req, res) => {
@@ -822,7 +837,7 @@ app.post('/purchases', requireAdmin, async (req, res) => {
     }
 
     res.json({ success: true, id: inserted.id });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.put('/purchases/:id', requireAdmin, async (req, res) => {
@@ -871,7 +886,7 @@ app.put('/purchases/:id', requireAdmin, async (req, res) => {
       amount_paid: newAmountPaid, payment_status: newStatus, notes: notes || ''
     }).eq('id', req.params.id);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.post('/purchases/:id/payments', requireAdmin, async (req, res) => {
@@ -888,7 +903,7 @@ app.post('/purchases/:id/payments', requireAdmin, async (req, res) => {
     const newStatus = newAmountPaid >= total ? 'paid' : newAmountPaid > 0 ? 'partial' : 'unpaid';
     await supabase.from('purchases').update({ payments: newPayments, amount_paid: newAmountPaid, payment_status: newStatus }).eq('id', req.params.id);
     res.json({ success: true, amountPaid: newAmountPaid, paymentStatus: newStatus });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.delete('/purchases/:id/payments/:paymentId', requireAdmin, async (req, res) => {
@@ -901,7 +916,7 @@ app.delete('/purchases/:id/payments/:paymentId', requireAdmin, async (req, res) 
     const newStatus = newAmountPaid >= total ? 'paid' : newAmountPaid > 0 ? 'partial' : 'unpaid';
     await supabase.from('purchases').update({ payments: newPayments, amount_paid: newAmountPaid, payment_status: newStatus }).eq('id', req.params.id);
     res.json({ success: true, amountPaid: newAmountPaid, paymentStatus: newStatus });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.delete('/purchases/:id', requireAdmin, async (req, res) => {
@@ -919,7 +934,7 @@ app.delete('/purchases/:id', requireAdmin, async (req, res) => {
     }
     await supabase.from('purchases').delete().eq('id', req.params.id);
     res.json({ success: true, stockReversed });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ EXPENSES ════════════════════
@@ -928,7 +943,7 @@ app.get('/expenses', requireAuth, async (req, res) => {
   try {
     const { data } = await supabase.from('expenses').select('*').order('date', { ascending: false });
     res.json((data || []).map(e => ({ id: e.id, category: e.category, description: e.description, amount: parseFloat(e.amount), notes: e.notes || '', date: e.date })));
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.post('/expenses', requireAdmin, async (req, res) => {
@@ -938,14 +953,14 @@ app.post('/expenses', requireAdmin, async (req, res) => {
     const { data, error } = await supabase.from('expenses').insert({ category: category || 'Other', description, amount: parseFloat(amount) || 0, notes: notes || '' }).select('id').single();
     if (error) throw new Error(error.message);
     res.json({ success: true, id: data.id });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.delete('/expenses/:id', requireAdmin, async (req, res) => {
   try {
     await supabase.from('expenses').delete().eq('id', req.params.id);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ DASHBOARD ════════════════════
@@ -985,7 +1000,7 @@ app.get('/dashboard', requireAdmin, async (req, res) => {
       month: { sales: totalSalesMonth, purchases: totalPurchasesMonth, expenses: totalExpensesMonth, profit: totalSalesMonth - totalPurchasesMonth - totalExpensesMonth },
       unpaidTotal, lowStock, recentSales
     });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ QUOTES ════════════════════
@@ -994,7 +1009,7 @@ app.get('/quotes', requireAuth, async (req, res) => {
   try {
     const { data } = await supabase.from('quotes').select('*').order('date', { ascending: false });
     res.json((data || []).map(toQuote));
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.post('/quotes', requireAuth, async (req, res) => {
@@ -1015,14 +1030,14 @@ app.post('/quotes', requireAuth, async (req, res) => {
     }).select('id').single();
     if (error) throw new Error(error.message);
     res.json({ success: true, quoteNumber, id: inserted.id });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.delete('/quotes/:id', requireAuth, async (req, res) => {
   try {
     await supabase.from('quotes').delete().eq('id', req.params.id);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.post('/quotes/:id/convert', requireAuth, async (req, res) => {
@@ -1048,7 +1063,7 @@ app.post('/quotes/:id/convert', requireAuth, async (req, res) => {
 
     await supabase.from('quotes').update({ status: 'converted', converted_to_invoice: invoiceNumber }).eq('id', req.params.id);
     res.json({ success: true, invoiceNumber });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ TEMPLATES ════════════════════
@@ -1057,7 +1072,7 @@ app.get('/templates', requireAuth, async (req, res) => {
   try {
     const { data } = await supabase.from('templates').select('*').order('created_at', { ascending: false });
     res.json((data || []).map(t => ({ id: t.id, name: t.name, lines: t.lines || [], notes: t.notes || '', createdAt: t.created_at })));
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.post('/templates', requireAdmin, async (req, res) => {
@@ -1067,14 +1082,14 @@ app.post('/templates', requireAdmin, async (req, res) => {
     const { data, error } = await supabase.from('templates').insert({ name, lines: lines || [], notes: notes || '' }).select('id').single();
     if (error) throw new Error(error.message);
     res.json({ success: true, id: data.id });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.delete('/templates/:id', requireAdmin, async (req, res) => {
   try {
     await supabase.from('templates').delete().eq('id', req.params.id);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ USERS ════════════════════
@@ -1083,7 +1098,7 @@ app.get('/users', requireAdmin, async (req, res) => {
   try {
     const { data } = await supabase.from('users').select('username, role, must_change_password, permissions').order('username');
     res.json((data || []).map(u => ({ username: u.username, role: u.role, mustChangePassword: !!u.must_change_password, permissions: u.permissions || null })));
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.post('/users', requireAdmin, async (req, res) => {
@@ -1098,7 +1113,7 @@ app.post('/users', requireAdmin, async (req, res) => {
     if (role === 'staff') newUser.permissions = Array.isArray(permissions) ? permissions : ['billing', 'quotations', 'clients'];
     await supabase.from('users').insert(newUser);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.put('/users/:username', requireAdmin, async (req, res) => {
@@ -1125,7 +1140,7 @@ app.put('/users/:username', requireAdmin, async (req, res) => {
     }
     await supabase.from('users').update(updates).eq('username', req.params.username);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 app.delete('/users/:username', requireAdmin, async (req, res) => {
@@ -1139,7 +1154,7 @@ app.delete('/users/:username', requireAdmin, async (req, res) => {
     }
     await supabase.from('users').delete().eq('username', req.params.username);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ GST REPORT ════════════════════
@@ -1174,7 +1189,7 @@ app.get('/gst-report', requireAdmin, async (req, res) => {
     res.json({ success: true, month: month || 'all', totalInvoices: data.length, b2b, b2c,
       rateSummary: Object.values(rateSummary).sort((a, b) => a.gstRate - b.gstRate),
       totals: { taxable: rnd(totTaxable), cgst: rnd(totCgst), sgst: rnd(totSgst), igst: rnd(totIgst), totalTax: rnd(totTax) } });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ TALLY EXPORT ════════════════════
@@ -1211,7 +1226,7 @@ app.get('/tally-export', requireAdmin, async (req, res) => {
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="TallyExport_${month || 'all'}.csv"`);
     res.send(rowLines.join('\n'));
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ PROFITABILITY ════════════════════
@@ -1248,7 +1263,7 @@ app.get('/profitability', requireAdmin, async (req, res) => {
       return { ...i, qty: rnd(i.qty), revenue: rnd(i.revenue), cost: rnd(i.cost), profit, margin };
     }).sort((a, b) => (b.revenue || 0) - (a.revenue || 0));
     res.json({ success: true, items });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ LEDGER ════════════════════
@@ -1336,22 +1351,33 @@ app.get('/ledger', requireAdmin, async (req, res) => {
         totalInvoiced: Math.round(totalInvoiced * 100) / 100, totalOutstanding: Math.round(totalOutstanding * 100) / 100,
         totalPayable: Math.round(totalPayable * 100) / 100, totalExpenses, totalPurchases },
       period: period || 'all', month: month || currentMonth, year: year || currentYear });
-  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+  } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
 
 // ════════════════════ EMAIL INVOICE ════════════════════
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 app.post('/email-invoice', requireAuth, async (req, res) => {
   try {
     if (!nodemailer) return res.json({ success: false, message: 'Email not available.' });
-    const { record, recipientEmail } = req.body;
-    if (!recipientEmail) return res.json({ success: false, message: 'Recipient email address is required.' });
+    const { invoiceNumber, recipientEmail } = req.body;
+    if (!recipientEmail || !EMAIL_RE.test(recipientEmail))
+      return res.json({ success: false, message: 'A valid recipient email address is required.' });
+    if (!invoiceNumber)
+      return res.json({ success: false, message: 'Invoice number is required.' });
+
+    // Fetch the record from DB — never trust client-supplied invoice data
+    const { data: row, error: fetchErr } = await supabase.from('documents').select('*').eq('invoice_number', invoiceNumber).single();
+    if (fetchErr || !row) return res.json({ success: false, message: 'Invoice not found.' });
+    const record = toRecord(row);
+
     const s = await readSettings();
     if (!s.smtpHost || !s.smtpUser || !s.smtpPass)
       return res.json({ success: false, message: 'SMTP not configured. Add email settings in the Settings tab.' });
     const inv = recordToInvoice(record, s);
     const html = buildGstInvoiceHTML({
-      invoiceNumber: record.invoiceNumber || 'DRAFT',
+      invoiceNumber: record.invoiceNumber,
       dateStr: new Date(record.date || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
       name: record.name, address: record.address, mobile: record.mobile,
       recipientGstin: record.recipientGstin || '', shipTo: record.shipTo || record.address,
@@ -1365,18 +1391,10 @@ app.post('/email-invoice', requireAuth, async (req, res) => {
       to: recipientEmail,
       subject: `${docLabel} ${record.invoiceNumber} from ${s.name}`,
       html: `<p>Dear ${record.name || 'Customer'},</p><p>Please find your ${docLabel.toLowerCase()} attached below.</p><p>Regards,<br>${s.name}${s.phone ? '<br>' + s.phone : ''}</p>`,
-      attachments: [{ filename: `${(record.invoiceNumber || 'document').replace(/\//g, '-')}.html`, content: html, contentType: 'text/html' }]
+      attachments: [{ filename: `${record.invoiceNumber.replace(/\//g, '-')}.html`, content: html, contentType: 'text/html' }]
     });
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ success: false, message: 'Email send failed: ' + err.message }); }
-});
-
-// ════════════════════ DEBUG ════════════════════
-
-app.get('/debug', requireAdmin, async (req, res) => {
-  const { count } = await supabase.from('documents').select('id', { count: 'exact' });
-  const s = await readSettings();
-  res.json({ supabaseUrl: process.env.SUPABASE_URL, totalRecords: count, settings: s });
+  } catch (err) { res.status(500).json({ success: false, message: 'Email send failed.' }); }
 });
 
 // Export for Vercel serverless (api/index.js requires this).
