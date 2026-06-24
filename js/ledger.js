@@ -28,7 +28,6 @@ function setLedgerPeriod(period, btn, opts) {
 }
 
 function loadLedger() {
-  if (currentRole !== "admin") return;
   const params = new URLSearchParams({ period: _ledgerPeriod });
   if (_ledgerPeriod === "month" && _ledgerMonth) params.set("month", _ledgerMonth);
   if (_ledgerPeriod === "year"  && _ledgerYear)  params.set("year",  _ledgerYear);

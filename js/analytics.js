@@ -3,7 +3,6 @@ let _analyticsMonthChart = null;
 let _analyticsTopChart = null;
 
 function loadAnalytics() {
-  if (currentRole !== "admin") return;
   apiFetch("/analytics").then(res => res.json()).then(data => {
     document.getElementById("dailyReport").innerHTML = `
       <div class="stat-box"><span class="stat-label">Date</span><span class="stat-value">${esc(data.daily.date)}</span></div>
@@ -98,7 +97,6 @@ function openClientFromAnalytics(mobile) {
 // ── GST RETURN REPORT ──
 let _lastGSTReport = null;
 function loadGSTReport() {
-  if (currentRole !== "admin") return;
   const month = document.getElementById("gstReportMonth").value;
   const url = month ? `/gst-report?month=${month}` : "/gst-report";
   apiFetch(url).then(res => res.json()).then(data => {
@@ -161,7 +159,6 @@ function exportGSTReportCSV() {
 
 // ── ITEM-WISE PROFITABILITY ──
 function loadProfitability() {
-  if (currentRole !== "admin") return;
   apiFetch("/profitability").then(res => res.json()).then(data => {
     const el = document.getElementById("profitabilityReport");
     if (!data.success || !data.items.length) { el.innerHTML = "<p style='color:#888'>No invoice data to analyse yet.</p>"; return; }

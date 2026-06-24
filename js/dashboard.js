@@ -3,7 +3,6 @@ let _dashMonthChart = null;
 let _dashTodayChart = null;
 
 function loadDashboard() {
-  if (currentRole !== "admin") return;
   apiFetch("/dashboard").then(r => r.json()).then(data => {
     document.getElementById("dashTodayCards").innerHTML = `
       <div class="stat-box"><span class="stat-label">Sales Today</span><span class="stat-value">${money(data.today.sales)}</span></div>
