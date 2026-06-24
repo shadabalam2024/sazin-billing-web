@@ -12,7 +12,6 @@ function loadUsers() {
         <td>${u.mustChangePassword ? '<span style="color:#dc3545;font-size:0.8rem;">Must change password</span>' : '<span style="color:#28a745;font-size:0.8rem;">Active</span>'}</td>
         <td>
           <button class="btn blue small-btn" data-perms='${JSON.stringify(u.permissions || null)}' onclick="showEditUserModal('${esc(u.username)}','${esc(u.role)}',JSON.parse(this.dataset.perms))">Edit</button>
-          <button class="btn small-btn" style="background:#fd7e14;color:#fff;" onclick="showResetPasswordModal('${esc(u.username)}')">Reset Password</button>
           ${u.username !== currentUser ? `<button class="btn red small-btn" onclick="deleteUser('${esc(u.username)}')">Delete</button>` : '<span style="font-size:0.75rem;color:#888;padding:0 6px;">(you)</span>'}
         </td>
       </tr>`).join("")}
@@ -101,32 +100,5 @@ function deleteUser(username) {
   apiFetch(`/users/${username}`, { method: "DELETE" }).then(res => res.json()).then(r => {
     if (r.success) { showSuccess(`User "${username}" deleted.`); loadUsers(); }
     else showError(r.message || "Delete failed.");
-  });
-}
-
-function showResetPasswordModal(username) {
-  document.getElementById("resetPwUsername").value = username;
-  document.getElementById("resetPwUsernameLabel").textContent = username;
-  document.getElementById("resetPwNew").value = "";
-  document.getElementById("resetPwConfirm").value = "";
-  document.getElementById("resetPwError").style.display = "none";
-  document.getElementById("resetPasswordModal").style.display = "flex";
-  setTimeout(() => document.getElementById("resetPwNew").focus(), 100);
-}
-
-function closeResetPasswordModal() { document.getElementById("resetPasswordModal").style.display = "none"; }
-
-function submitResetPassword() {
-  const username = document.getElementById("resetPwUsername").value;
-  const newPassword = document.getElementById("resetPwNew").value.trim();
-  const confirm = document.getElementById("resetPwConfirm").value.trim();
-  const errEl = document.getElementById("resetPwError");
-  errEl.style.display = "none";
-  if (!newPassword) { errEl.textContent = "Enter a new password."; errEl.style.display = "block"; return; }
-  if (newPassword.length < 6) { errEl.textContent = "Password must be at least 6 characters."; errEl.style.display = "block"; return; }
-  if (newPassword !== confirm) { errEl.textContent = "Passwords do not match."; errEl.style.display = "block"; return; }
-  apiFetch(`/users/${username}`, { method: "PUT", body: JSON.stringify({ newPassword }) }).then(res => res.json()).then(r => {
-    if (r.success) { showSuccess(`Password reset for "${username}". They will be asked to change it on next login.`); closeResetPasswordModal(); loadUsers(); }
-    else { errEl.textContent = r.message || "Reset failed."; errEl.style.display = "block"; }
   });
 }
