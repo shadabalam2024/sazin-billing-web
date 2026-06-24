@@ -219,7 +219,19 @@ app.get('/debug-connection', async (req, res) => {
 app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body || {};
-    const { data: users } = await supabase.from('users').select('*').eq('username', username).limit(1);
+    const { data: users, error: dbErr } = await supabase.from('users').select('*').eq('username', username).limit(1);
+    // TEMP DEBUG — remove after login confirmed
+    if (req.headers['x-debug'] === 'true') {
+      return res.json({
+        debug: true,
+        hasSupabaseUrl: !!process.env.SUPABASE_URL,
+        hasSupabaseKey: !!process.env.SUPABASE_SERVICE_KEY,
+        supabaseUrlPrefix: (process.env.SUPABASE_URL || '').slice(0, 30),
+        dbErr: dbErr ? dbErr.message : null,
+        userCount: users ? users.length : null,
+        usernameQueried: username
+      });
+    }
     const user = users?.[0];
     if (!user || !bcrypt.compareSync(password || '', user.password_hash))
       return res.json({ success: false, message: 'Invalid username or password.' });
