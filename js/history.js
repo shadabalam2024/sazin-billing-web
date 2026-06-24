@@ -20,7 +20,7 @@ function renderHistory(records) {
       <th style="min-width:120px;text-align:left;">Client</th>
       <th style="min-width:90px;">Amount</th>
       <th style="min-width:80px;">Status</th>
-      ${currentRole === "admin" ? '<th style="min-width:220px;">Actions</th>' : ""}
+      <th style="min-width:120px;">Actions</th>
     </tr></thead>
     <tbody>${records.map(r => {
       const color = DOCTYPE_COLORS[r.docType] || '#333';
@@ -39,7 +39,7 @@ function renderHistory(records) {
             ${isInvoice ? `<button class="btn small-btn" style="background:#e67e22;color:#fff;" onclick="openReturnExchangeModal('${esc(r.invoiceNumber)}')">↩</button>` : ''}
             <button class="btn red small-btn" onclick="deleteHistoryEntry('${esc(r.invoiceNumber)}','${esc(r.docType || 'invoice')}')">🗑</button>
            </td>`
-        : '';
+        : `<td class="inv-actions"><button class="btn blue small-btn" onclick="printFromHistory('${esc(r.invoiceNumber)}')">🖨</button></td>`;
       return `<tr>
         <td style="white-space:nowrap;font-size:0.85rem;">${esc(r.dateStr)}</td>
         <td style="font-weight:600;font-size:0.85rem;white-space:nowrap;">${esc(r.invoiceNumber)}</td>

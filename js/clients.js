@@ -155,11 +155,10 @@ function updatePaymentStatus(invoiceNumber, status, amountPaid, selectEl) {
 
 // ── REFRESH ALL SECTIONS AFFECTED BY A DELETION ──
 function refreshAffectedSections(type) {
-  if (currentRole === "admin") {
-    loadAnalytics();
-    loadDashboard();
-    if (_ledgerData) loadLedger();
-  }
+  const canSee = tab => currentRole === "admin" || (Array.isArray(currentPermissions) && currentPermissions.includes(tab));
+  if (canSee("analytics")) loadAnalytics();
+  if (canSee("dashboard")) loadDashboard();
+  if (canSee("ledger") && _ledgerData) loadLedger();
   if (type === "invoice" || type === "purchase") {
     loadInventoryCache();
     if (document.getElementById("tab-inventory")?.classList.contains("active")) loadInventory();
