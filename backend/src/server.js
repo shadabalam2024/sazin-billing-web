@@ -27,14 +27,6 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '5mb' }));
 
-// Rate limit login: max 10 attempts per 15 minutes per IP
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many login attempts. Please try again in 15 minutes.' }
-});
 
 // ── Default company settings ──
 const DEFAULT_SETTINGS = {
@@ -211,7 +203,7 @@ function salesRecords(records) {
 
 // ════════════════════ AUTH ════════════════════
 
-app.post('/login', loginLimiter, async (req, res) => {
+app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body || {};
     const { data: users } = await supabase.from('users').select('*').eq('username', username).limit(1);
