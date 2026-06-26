@@ -4,17 +4,27 @@ function loadUsers() {
   apiFetch("/users").then(res => res.json()).then(users => {
     const el = document.getElementById("userList");
     if (!users.length) { el.innerHTML = "<p style='color:#888'>No users found.</p>"; return; }
-    el.innerHTML = `<table class="result-table"><thead><tr><th>Username</th><th>Role</th><th>Access</th><th>Status</th><th>Actions</th></tr></thead><tbody>
-      ${users.map(u => `<tr>
-        <td style="font-weight:600;">${esc(u.username)}</td>
-        <td><span class="role-tag ${u.role === 'admin' ? 'role-admin' : 'role-staff'}">${u.role === 'admin' ? 'Admin' : 'Staff'}</span></td>
-        <td style="font-size:0.8rem;color:#555;">${u.role === 'admin' ? '<em>All tabs</em>' : (Array.isArray(u.permissions) ? u.permissions.length + ' tabs' : 'default')}</td>
-        <td>${u.mustChangePassword ? '<span style="color:#dc3545;font-size:0.8rem;">Must change password</span>' : '<span style="color:#28a745;font-size:0.8rem;">Active</span>'}</td>
-        <td>
-          <button class="btn blue small-btn" data-perms='${JSON.stringify(u.permissions || null)}' onclick="showEditUserModal('${esc(u.username)}','${esc(u.role)}',JSON.parse(this.dataset.perms))">Edit</button>
-          ${u.username !== currentUser ? `<button class="btn red small-btn" onclick="deleteUser('${esc(u.username)}')">Delete</button>` : '<span style="font-size:0.75rem;color:#888;padding:0 6px;">(you)</span>'}
-        </td>
-      </tr>`).join("")}
+    el.innerHTML = `<table class="result-table"><thead><tr><th>Username</th><th>Role</th><th>Access</th><th>Last Login</th><th>Session</th><th>Actions</th></tr></thead><tbody>
+      ${users.map(u => {
+        const lastLogin = u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : 'Never';
+        const sessionBadge = u.sessionActive
+          ? `<span style="color:#16a34a;font-size:0.8rem;font-weight:600;">● Active</span>`
+          : (u.lastLoginAt ? `<span style="color:#9ca3af;font-size:0.8rem;">○ Logged out</span>` : `<span style="color:#9ca3af;font-size:0.8rem;">—</span>`);
+        return `<tr>
+          <td style="font-weight:600;">${esc(u.username)}${u.mustChangePassword ? ' <span style="color:#dc3545;font-size:0.75rem;">(pwd change req.)</span>' : ''}</td>
+          <td><span class="role-tag ${u.role === 'admin' ? 'role-admin' : 'role-staff'}">${u.role === 'admin' ? 'Admin' : 'Staff'}</span></td>
+          <td style="font-size:0.8rem;color:#555;">${u.role === 'admin' ? '<em>All tabs</em>' : (Array.isArray(u.permissions) ? u.permissions.length + ' tabs' : 'default')}</td>
+          <td style="font-size:0.8rem;color:#555;white-space:nowrap;">${lastLogin}</td>
+          <td>${sessionBadge}</td>
+          <td style="white-space:nowrap;">
+            <button class="btn blue small-btn" data-perms='${JSON.stringify(u.permissions || null)}' onclick="showEditUserModal('${esc(u.username)}','${esc(u.role)}',JSON.parse(this.dataset.perms))">Edit</button>
+            ${u.username !== currentUser
+              ? `<button class="btn small-btn" style="background:#e67e22;color:#fff;" onclick="forceLogout('${esc(u.username)}')" title="Kick off all devices">⏏ Logout</button>
+                 <button class="btn red small-btn" onclick="deleteUser('${esc(u.username)}')">Delete</button>`
+              : '<span style="font-size:0.75rem;color:#888;padding:0 6px;">(you)</span>'}
+          </td>
+        </tr>`;
+      }).join("")}
     </tbody></table>`;
   }).catch(() => {});
 }
@@ -93,6 +103,14 @@ function submitAddUser() {
       else { errEl.textContent = r.message; errEl.style.display = "block"; }
     });
   }
+}
+
+function forceLogout(username) {
+  if (!confirm(`Force-logout "${username}" from all devices? They will need to sign in again.`)) return;
+  apiFetch(`/users/${username}/force-logout`, { method: 'POST' }).then(r => r.json()).then(r => {
+    if (r.success) { showSuccess(`"${username}" has been logged out from all devices.`); loadUsers(); }
+    else showError(r.message || 'Force-logout failed.');
+  });
 }
 
 function deleteUser(username) {
