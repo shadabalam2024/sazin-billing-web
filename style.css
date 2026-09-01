@@ -304,6 +304,13 @@ button.yellow:hover { background: #e0a800; }
   font-weight: 500;
   margin-top: 1px;
 }
+.sidebar-version {
+  margin-top: auto;
+  padding: 12px 14px;
+  font-size: 0.66rem;
+  color: #b0bac8;
+  font-weight: 500;
+}
 
 /* ===============================
    SIDEBAR NAV (vertical)
@@ -481,6 +488,16 @@ button.yellow:hover { background: #e0a800; }
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #0050a0 0%, #003d82 40%, #002a5e 100%);
+}
+.login-version {
+  position: fixed;
+  bottom: 14px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.55);
+  font-weight: 500;
 }
 .login-box {
   background: #fff;

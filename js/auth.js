@@ -26,6 +26,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (sessionStorage.getItem("mustChangePassword")) document.getElementById("pwdBanner").style.display = "block";
   loadSettings();
   loadInventoryCache();
+  apiFetch("/version").then(r => r.json()).then(v => {
+    document.getElementById("appVersion").textContent = `v${v.version} · ${v.commit}`;
+  }).catch(() => {});
 });
 
 function logout() {

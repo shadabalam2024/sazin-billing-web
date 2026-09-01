@@ -42,6 +42,14 @@ function logError(req, err) {
   console.error(`[${req.method} ${req.originalUrl}]`, err);
 }
 
+// Which build is actually running — Vercel sets VERCEL_GIT_COMMIT_SHA on every
+// deploy (Production and Preview alike); it's absent for a local `npm run dev`.
+const pkg = require('../../package.json');
+const GIT_COMMIT = process.env.VERCEL_GIT_COMMIT_SHA || null;
+app.get('/version', (req, res) => {
+  res.json({ version: pkg.version, commit: GIT_COMMIT ? GIT_COMMIT.slice(0, 7) : 'local' });
+});
+
 // ── Default company settings ──
 const DEFAULT_SETTINGS = {
   name: 'Sazin Tech',

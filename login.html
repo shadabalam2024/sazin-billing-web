@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Sazin Tech - Login</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,6 +30,7 @@
       </div>
       <button class="btn green login-btn" onclick="doLogin()">Login</button>
     </div>
+    <div id="appVersion" class="login-version"></div>
   </div>
   <script>
     const API = window.SAZIN_API_URL || "http://localhost:3000";
@@ -65,6 +67,9 @@
       const input = document.getElementById("loginPassword");
       input.type = input.type === "password" ? "text" : "password";
     }
+    fetch(API + "/version").then(r => r.json()).then(v => {
+      document.getElementById("appVersion").textContent = `v${v.version} · ${v.commit}`;
+    }).catch(() => {});
   </script>
 </body>
 </html>
