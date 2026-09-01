@@ -11,13 +11,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const allowed = Array.isArray(currentPermissions) ? currentPermissions.includes(perm) : false;
       btn.style.display = allowed ? "" : "none";
     });
-    if (!Array.isArray(currentPermissions) || !currentPermissions.includes("billing")) {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-      const firstVisible = document.querySelector(".tab-btn[data-perm]:not([style*='display: none']):not([style*='display:none'])");
-      if (firstVisible) firstVisible.click();
-    }
   }
+
+  // Restore the tab from the URL hash (set by showTab below) so a refresh
+  // or a shared link lands back on the same tab instead of always Billing.
+  const hashTab = location.hash.slice(1);
+  if (!(hashTab && applyTab(hashTab))) redirectToDefaultTab();
+  window.addEventListener("hashchange", () => {
+    if (!applyTab(location.hash.slice(1))) redirectToDefaultTab();
+  });
+
   document.getElementById("changePwdBtn").style.display = "inline-block";
   document.getElementById("currentDate").textContent = new Date().toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" });
   if (sessionStorage.getItem("mustChangePassword")) document.getElementById("pwdBanner").style.display = "block";
@@ -29,13 +32,36 @@ function logout() {
   apiFetch("/logout", { method: "POST" }).catch(() => {}).finally(() => { sessionStorage.clear(); window.location.href = "login.html"; });
 }
 
-function showTab(tab, btn) {
-  if (tab === "settings" && currentRole !== "admin") return;
-  if (currentRole !== "admin" && !(Array.isArray(currentPermissions) && currentPermissions.includes(tab))) return;
+function tabButton(tab) {
+  return document.querySelector(`.tab-btn[data-perm="${tab}"]`) || (tab === "settings" ? document.querySelector(".tab-btn.admin-only") : null);
+}
+
+// Lands on Billing (or, for a staff user without Billing access, their first
+// permitted tab) when the requested hash is missing, unknown, or not permitted.
+function redirectToDefaultTab() {
+  history.replaceState(null, "", location.pathname + location.search);
+  if (currentRole !== "admin" && !(Array.isArray(currentPermissions) && currentPermissions.includes("billing"))) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    const firstVisible = document.querySelector(".tab-btn[data-perm]:not([style*='display: none']):not([style*='display:none'])");
+    if (firstVisible) firstVisible.click();
+  } else {
+    location.hash = "billing";
+  }
+}
+
+// Switches to `tab` and updates document state (active classes, lazy loads).
+// Does NOT touch the URL — callers that should update it call showTab() instead.
+function applyTab(tab, btn) {
+  if (tab === "settings" && currentRole !== "admin") return false;
+  if (currentRole !== "admin" && !(Array.isArray(currentPermissions) && currentPermissions.includes(tab))) return false;
+  const content = document.getElementById("tab-" + tab);
+  if (!content) return false;
   document.querySelectorAll(".tab-content").forEach(el => el.classList.remove("active"));
   document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
-  document.getElementById("tab-" + tab).classList.add("active");
-  if (btn) btn.classList.add("active");
+  content.classList.add("active");
+  const targetBtn = btn || tabButton(tab);
+  if (targetBtn) targetBtn.classList.add("active");
   if (tab === "analytics") loadAnalytics();
   if (tab === "history") loadHistory();
   if (tab === "inventory") loadInventory();
@@ -45,4 +71,10 @@ function showTab(tab, btn) {
   if (tab === "quotations") { loadQuotes(); loadNextQuotePreview(); }
   if (tab === "ledger") { loadLedger(); }
   if (tab === "settings") { loadUsers(); }
+  return true;
+}
+
+function showTab(tab, btn) {
+  if (!applyTab(tab, btn)) return;
+  if (location.hash !== "#" + tab) location.hash = tab;
 }
