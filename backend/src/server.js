@@ -212,7 +212,7 @@ app.post('/login', async (req, res) => {
       return res.json({ success: false, message: 'Invalid username or password.' });
     const token = issueToken({ username: user.username, role: user.role, permissions: user.permissions });
     const permissions = user.role === 'admin' ? null : (user.permissions || ['billing', 'quotations', 'clients']);
-    supabase.from('users').update({ last_login_at: new Date().toISOString() }).eq('username', user.username).catch(console.error);
+    supabase.from('users').update({ last_login_at: new Date().toISOString() }).eq('username', user.username).then(null, console.error);
     res.json({ success: true, token, role: user.role, username: user.username, mustChangePassword: !!user.must_change_password, permissions });
   } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'An internal error occurred.' }); }
 });
