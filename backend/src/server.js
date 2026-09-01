@@ -30,10 +30,10 @@ app.use(express.json({ limit: '5mb' }));
 
 // ── Default company settings ──
 const DEFAULT_SETTINGS = {
-  name: 'Swift Software',
+  name: 'Sazin Tech',
   address: 'New Delhi',
   gstin: '', stateName: 'Delhi', stateCode: '07',
-  phone: '', email: '', logoText: 'SS',
+  phone: '', email: '', logoText: 'ST',
   bankName: '', bankAccount: '', bankIfsc: '', upi: '',
   declaration: 'Declaration: We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.',
   invoicePrefix: 'SAZIN', defaultHsn: '3925', defaultGstRate: 18,
