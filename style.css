@@ -360,8 +360,30 @@ button.yellow:hover { background: #e0a800; }
   border-left: 3px solid #0063c6;
   box-shadow: 0 1px 4px rgba(0,99,198,0.1);
 }
-.tab-content { display: none; }
+.tab-content { display: none; position: relative; }
 .tab-content.active { display: block; }
+
+.tab-loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.75);
+  z-index: 5;
+  font-weight: 600;
+  color: #555;
+}
+.tab-spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid #d8e3ee;
+  border-top-color: #0078d7;
+  border-radius: 50%;
+  animation: tab-spin 0.7s linear infinite;
+}
+@keyframes tab-spin { to { transform: rotate(360deg); } }
 
 /* ===============================
    INVOICE PREVIEW BAR

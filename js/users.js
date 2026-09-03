@@ -1,7 +1,7 @@
 // ── USER MANAGEMENT ──
 function loadUsers() {
   if (currentRole !== "admin") return;
-  apiFetch("/users").then(res => res.json()).then(users => {
+  return apiFetch("/users").then(res => res.json()).then(users => {
     const el = document.getElementById("userList");
     if (!users.length) { el.innerHTML = "<p style='color:#888'>No users found.</p>"; return; }
     el.innerHTML = `<table class="result-table"><thead><tr><th>Username</th><th>Role</th><th>Access</th><th>Last Login</th><th>Session</th><th>Actions</th></tr></thead><tbody>

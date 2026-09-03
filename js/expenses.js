@@ -11,7 +11,7 @@ function saveExpense() {
 
 function loadExpenses() {
   const filterCat = document.getElementById("expFilterCategory").value;
-  apiFetch("/expenses").then(r => r.json()).then(expenses => {
+  return apiFetch("/expenses").then(r => r.json()).then(expenses => {
     const filtered = filterCat ? expenses.filter(e => e.category === filterCat) : expenses;
     const el = document.getElementById("expenseHistory");
     if (!filtered.length) { el.innerHTML = "<p style='color:#888'>No expenses recorded.</p>"; return; }

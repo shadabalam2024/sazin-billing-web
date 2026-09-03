@@ -65,15 +65,15 @@ function applyTab(tab, btn) {
   content.classList.add("active");
   const targetBtn = btn || tabButton(tab);
   if (targetBtn) targetBtn.classList.add("active");
-  if (tab === "analytics") loadAnalytics();
-  if (tab === "history") loadHistory();
-  if (tab === "inventory") loadInventory();
-  if (tab === "purchases") { loadPurchases(); initExistingPurchaseRows(); }
-  if (tab === "expenses") loadExpenses();
-  if (tab === "dashboard") loadDashboard();
-  if (tab === "quotations") { loadQuotes(); loadNextQuotePreview(); }
-  if (tab === "ledger") { loadLedger(); }
-  if (tab === "settings") { loadUsers(); }
+  if (tab === "analytics") withTabLoading(tab, loadAnalytics);
+  if (tab === "history") withTabLoading(tab, loadHistory);
+  if (tab === "inventory") withTabLoading(tab, loadInventory);
+  if (tab === "purchases") { withTabLoading(tab, loadPurchases); initExistingPurchaseRows(); }
+  if (tab === "expenses") withTabLoading(tab, loadExpenses);
+  if (tab === "dashboard") withTabLoading(tab, loadDashboard);
+  if (tab === "quotations") { withTabLoading(tab, loadQuotes); loadNextQuotePreview(); }
+  if (tab === "ledger") { withTabLoading(tab, loadLedger); }
+  if (tab === "settings") { withTabLoading(tab, loadUsers); }
   return true;
 }
 

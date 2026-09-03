@@ -143,7 +143,7 @@ function printQuote() {
 }
 
 function loadQuotes() {
-  apiFetch("/quotes").then(res => res.json()).then(quotes => {
+  return apiFetch("/quotes").then(res => res.json()).then(quotes => {
     const filterStatus = document.getElementById("quoteStatusFilter").value;
     const filtered = filterStatus ? quotes.filter(q => q.status === filterStatus) : quotes;
     const el = document.getElementById("quoteHistory");

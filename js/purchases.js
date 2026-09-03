@@ -2,7 +2,7 @@
 let _purchaseData = [];
 
 function loadPurchases() {
-  apiFetch("/purchases").then(r => r.json()).then(purchases => {
+  return apiFetch("/purchases").then(r => r.json()).then(purchases => {
     _purchaseData = [...purchases].reverse();
     renderPurchases(_purchaseData);
   });

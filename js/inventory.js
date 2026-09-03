@@ -2,7 +2,7 @@
 let _inventoryAll = [];
 
 function loadInventory() {
-  apiFetch("/inventory").then(r => r.json()).then(items => {
+  return apiFetch("/inventory").then(r => r.json()).then(items => {
     _inventoryAll = items; renderInventoryTable(items);
     const cats = [...new Set(items.map(i => i.category).filter(Boolean))];
     const sel = document.getElementById("invCategoryFilter"); const current = sel.value;

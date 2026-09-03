@@ -3,7 +3,7 @@ const DOCTYPE_LABELS = { invoice: 'Invoice', proforma: 'Proforma', quote: 'Quota
 const DOCTYPE_COLORS = { invoice: '#0078d7', proforma: '#6f42c1', quote: '#fd7e14', 'credit-note': '#dc3545', 'debit-note': '#e67e22' };
 
 function loadHistory() {
-  apiFetch("/history").then(res => res.json()).then(records => {
+  return apiFetch("/history").then(res => res.json()).then(records => {
     _historyData = records;
     filterHistory();
   }).catch(() => {});

@@ -43,3 +43,29 @@ function showToast(msg, type = "error") {
 }
 function showError(msg) { showToast(msg, "toast-error"); }
 function showSuccess(msg) { showToast(msg, "toast-success"); }
+
+// ── TAB LOADING INDICATOR ──
+// Switching to a data-driven tab (Dashboard, History, etc.) used to leave
+// the tab looking blank/stuck for the ~1s round trip to the API. Show a
+// spinner over the tab immediately, hide it once the load finishes either
+// way.
+function showTabLoading(tab) {
+  const el = document.getElementById("tab-" + tab);
+  if (!el || el.querySelector(".tab-loading-overlay")) return;
+  const overlay = document.createElement("div");
+  overlay.className = "tab-loading-overlay";
+  overlay.innerHTML = `<div class="tab-spinner"></div><span>Loading…</span>`;
+  el.appendChild(overlay);
+}
+function hideTabLoading(tab) {
+  const el = document.getElementById("tab-" + tab);
+  const overlay = el && el.querySelector(".tab-loading-overlay");
+  if (overlay) overlay.remove();
+}
+// Wraps a tab's load call: shows the spinner, runs it, hides the spinner
+// once its promise settles (success or failure). fn may return a promise
+// or nothing — both are handled.
+function withTabLoading(tab, fn) {
+  showTabLoading(tab);
+  Promise.resolve(fn()).catch(() => {}).finally(() => hideTabLoading(tab));
+}
