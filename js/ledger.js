@@ -31,7 +31,7 @@ function loadLedger() {
   const params = new URLSearchParams({ period: _ledgerPeriod });
   if (_ledgerPeriod === "month" && _ledgerMonth) params.set("month", _ledgerMonth);
   if (_ledgerPeriod === "year"  && _ledgerYear)  params.set("year",  _ledgerYear);
-  apiFetch("/ledger?" + params.toString()).then(r => r.json()).then(data => {
+  return apiFetch("/ledger?" + params.toString()).then(r => r.json()).then(data => {
     if (!data.success) { showError(data.message || "Failed to load ledger"); return; }
     _ledgerData = data;
     _ledgerShowOutstanding = false;

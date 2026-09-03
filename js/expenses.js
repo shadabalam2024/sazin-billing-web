@@ -11,7 +11,7 @@ function saveExpense() {
 
 function loadExpenses() {
   const filterCat = document.getElementById("expFilterCategory").value;
-  apiFetch("/expenses").then(r => r.json()).then(expenses => {
+  return apiFetch("/expenses").then(r => r.json()).then(expenses => {
     const filtered = filterCat ? expenses.filter(e => e.category === filterCat) : expenses;
     const el = document.getElementById("expenseHistory");
     if (!filtered.length) { el.innerHTML = "<p style='color:#888'>No expenses recorded.</p>"; return; }
@@ -21,7 +21,7 @@ function loadExpenses() {
         <div class="client-card" style="padding:12px;margin-bottom:8px;">
           <div class="card-header-row">
             <div><strong>${esc(e.category)}</strong> &mdash; ${esc(e.description)} <span class="bill-date">${e.date ? new Date(e.date).toLocaleDateString("en-IN") : ""}</span></div>
-            <div class="card-actions"><span style="font-weight:700;color:#dc3545;">₹ ${parseFloat(e.amount || 0).toFixed(2)}</span><button class="btn red small-btn" onclick="deleteExpense('${esc(e.id)}')">🗑️</button></div>
+            <div class="card-actions"><span style="font-weight:700;color:#dc3545;">₹ ${parseFloat(e.amount || 0).toFixed(2)}</span><button class="btn red small-btn" onclick="deleteExpense('${esc(e.id)}')" title="Delete" aria-label="Delete">🗑️</button></div>
           </div>
           ${e.notes ? `<p style="color:#888;margin-top:4px;">${esc(e.notes)}</p>` : ""}
         </div>`).join("");

@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+
+      - name: Syntax-check all JS files
+        run: |
+          failed=0
+          for f in $(git ls-files '*.js' | grep -v '^node_modules/'); do
+            node --check "$f" || failed=1
+          done
+          exit $failed
+
+      - name: Rebuild index.html and check it matches its sources
+        run: |
+          npm run build:html
+          git diff --exit-code index.html || (echo "" && echo "ERROR: index.html is out of date with index.template.html / partials/*.html." && echo "Run 'npm run build:html' after editing a partial and commit the result." && exit 1)
+
+      - name: Guard against bare .catch() on a Supabase query chain
+        run: |
+          # Supabase's query builder is thenable but not a real Promise, so
+          # .catch() called directly on it throws at runtime (this crashed
+          # /login in production on 2026-09-01). Use .then(onFulfilled,
+          # onRejected) instead, or await it inside a try/catch.
+          matches=$(grep -rn "supabase" backend/src --include="*.js" | grep "\.catch(" | grep -v "\.then(" || true)
+          if [ -n "$matches" ]; then
+            echo "$matches"
+            echo ""
+            echo "ERROR: found .catch() chained directly onto what looks like a Supabase call, with no .then() on the same line."
+            echo "Supabase's query builder is a thenable, not a real Promise — bare .catch() will throw at runtime."
+            exit 1
+          fi
+
+      - name: Backend smoke tests
+        run: npm test

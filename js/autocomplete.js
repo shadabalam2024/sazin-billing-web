@@ -23,7 +23,7 @@ function _buildProductCell(name, hsn) {
     <div class="prod-ac-wrap">
       <div class="prod-ac-row">
         <input type="text" class="r-desc" value="${n}" placeholder="Product name" autocomplete="off" data-sugid="${uid}">
-        <button type="button" class="prod-dropdown-btn" tabindex="-1" title="Browse all inventory">▼</button>
+        <button type="button" class="prod-dropdown-btn" tabindex="-1" title="Browse all inventory" aria-label="Browse all inventory">▼</button>
       </div>
       <span class="prod-inv-warn" style="display:none" title="Not in inventory — stock won't be deducted">⚠️ Not in inventory</span>
     </div>
@@ -35,6 +35,17 @@ function _removeSugBox(uid) {
   const el = document.getElementById("sug-" + uid);
   if (el) el.remove();
   _sugScrollHandlers.delete(uid);
+}
+
+// Once a product name is entered into the last row of a table, add a fresh
+// blank row below it — so filling in items doesn't require repeatedly
+// clicking "+ Add Row". Fires once per row (guarded by autoRowAdded).
+function _maybeAutoAddRow(row, tableId) {
+  if (row.dataset.autoRowAdded) return;
+  const tbody = row.closest("tbody");
+  if (!tbody || tbody.lastElementChild !== row) return;
+  row.dataset.autoRowAdded = "1";
+  if (tableId === "qMeasurements") addQuoteRow(); else addRow();
 }
 
 function attachProductAutocomplete(row, tableId) {
@@ -116,6 +127,7 @@ function attachProductAutocomplete(row, tableId) {
     const matches = inStockItems().filter(i => i.name.toLowerCase().includes(q)).slice(0, 10);
     if (matches.length) renderSuggestions(matches); else hideSugBox();
     (tableId === "qMeasurements" ? calcQuoteRow : calculateRow)(row);
+    _maybeAutoAddRow(row, tableId);
   });
 
   input.addEventListener("focus", () => {
@@ -175,4 +187,5 @@ function selectInventoryItem(row, item, tableId) {
   row.querySelector(".prod-inv-warn").style.display = "none";
   const recalc = tableId === "qMeasurements" ? calcQuoteRow : calculateRow;
   recalc(row);
+  _maybeAutoAddRow(row, tableId);
 }

@@ -1,0 +1,43 @@
+      <div class="card">
+        <div class="analytics-header">
+          <h2>📊 Reports & Analytics</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn green" onclick="exportToExcel()">⬇ Export CSV</button>
+            <button class="btn blue" onclick="exportTally()">📒 Tally Export</button>
+          </div>
+        </div>
+        <div class="analytics-section"><h3>📅 Today's Report</h3><div id="dailyReport" class="stat-row"></div></div>
+        <div class="analytics-section"><h3>📆 Yearly Revenue</h3><div id="yearlyReport"></div></div>
+        <div class="analytics-section">
+          <h3>📈 Monthly Revenue Trend</h3>
+          <div class="analytics-chart-wrap"><canvas id="analyticsMonthChart"></canvas></div>
+          <div id="monthlyReport"></div>
+        </div>
+        <div class="analytics-section">
+          <h3>🏆 Top Clients by Revenue</h3>
+          <div class="analytics-chart-wrap"><canvas id="analyticsTopChart"></canvas></div>
+          <div id="topClientsReport"></div>
+        </div>
+
+        <!-- GST Return Report -->
+        <div class="analytics-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+            <h3 style="margin:0;">🧾 GST Return Report (GSTR-1 / GSTR-3B)</h3>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <input type="month" id="gstReportMonth" style="padding:6px;border:1px solid #ccc;border-radius:4px;font-size:0.85rem;">
+              <button class="btn blue small-btn" onclick="loadGSTReport()">Generate</button>
+              <button class="btn green small-btn" onclick="exportGSTReportCSV()">⬇ Export</button>
+            </div>
+          </div>
+          <div id="gstReportContent"></div>
+        </div>
+
+        <!-- Item-wise Profitability -->
+        <div class="analytics-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h3 style="margin:0;">💹 Item-wise Profitability</h3>
+            <button class="btn blue small-btn" onclick="loadProfitability()">Refresh</button>
+          </div>
+          <div id="profitabilityReport"></div>
+        </div>
+      </div>

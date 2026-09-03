@@ -43,3 +43,40 @@ function showToast(msg, type = "error") {
 }
 function showError(msg) { showToast(msg, "toast-error"); }
 function showSuccess(msg) { showToast(msg, "toast-success"); }
+
+// ── TAB LOADING INDICATOR ──
+// Switching to a data-driven tab (Dashboard, History, etc.) used to leave
+// the tab looking blank/stuck for the ~1s round trip to the API. Show a
+// spinner over the tab immediately, hide it once the load finishes either
+// way.
+function showTabLoading(tab) {
+  const el = document.getElementById("tab-" + tab);
+  if (!el || el.querySelector(".tab-loading-overlay")) return;
+  const overlay = document.createElement("div");
+  overlay.className = "tab-loading-overlay";
+  overlay.innerHTML = `<div class="tab-spinner"></div><span>Loading…</span>`;
+  el.appendChild(overlay);
+}
+function hideTabLoading(tab) {
+  const el = document.getElementById("tab-" + tab);
+  const overlay = el && el.querySelector(".tab-loading-overlay");
+  if (overlay) overlay.remove();
+}
+// Wraps a tab's load call. First visit to a tab this session: show the
+// spinner (there's nothing to look at yet). Every visit after that: the
+// previous render is still sitting in the DOM (tabs are hidden via CSS,
+// never destroyed), so skip the spinner entirely and just refetch quietly
+// in the background — the load function's own render call updates the
+// content in place once it lands. This is what stops every tab switch
+// from feeling like a fresh reload: revisiting a tab is instant, and data
+// still self-corrects within about a second if something changed
+// elsewhere (e.g. an invoice saved while you were on a different tab).
+const _tabLoadedOnce = new Set();
+function withTabLoading(tab, fn) {
+  const firstLoad = !_tabLoadedOnce.has(tab);
+  if (firstLoad) showTabLoading(tab);
+  Promise.resolve(fn())
+    .then(() => { _tabLoadedOnce.add(tab); })
+    .catch(() => {})
+    .finally(() => { if (firstLoad) hideTabLoading(tab); });
+}

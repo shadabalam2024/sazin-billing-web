@@ -1,0 +1,48 @@
+      <div class="card" style="margin-bottom:16px;">
+        <h2>⚙️ Company Profile & Invoice Settings</h2>
+        <p style="color:#666;margin-bottom:16px;">These details appear on every GST tax invoice. Fill the GSTIN and bank details before issuing invoices.</p>
+        <div class="settings-grid">
+          <label>Company Name <input id="setName"></label>
+          <label>GSTIN <input id="setGstin" placeholder="e.g. 10ABCDE1234F1Z5"></label>
+          <label class="full">Address <input id="setAddress"></label>
+          <label>State Name <input id="setStateName"></label>
+          <label>State Code <input id="setStateCode" placeholder="e.g. 10"></label>
+          <label>Phone <input id="setPhone"></label>
+          <label>Email <input id="setEmail"></label>
+          <label>Logo Text (short) <input id="setLogoText" maxlength="10"></label>
+          <label>Invoice Prefix <input id="setInvoicePrefix" placeholder="e.g. SAZIN"></label>
+          <label>Default HSN <input id="setDefaultHsn" placeholder="3925"></label>
+          <label>Default GST % <input id="setDefaultGstRate" type="number"></label>
+          <label>Bank Name <input id="setBankName"></label>
+          <label>Bank A/C No <input id="setBankAccount"></label>
+          <label>IFSC <input id="setBankIfsc"></label>
+          <label>UPI ID <input id="setUpi"></label>
+          <label class="full">Declaration / Terms <textarea id="setDeclaration" rows="2"></textarea></label>
+        </div>
+        <div style="margin-top:14px;"><button class="btn green" onclick="saveSettings()">💾 Save Settings</button></div>
+      </div>
+
+      <!-- SMTP / Email Settings -->
+      <div class="card" style="margin-bottom:16px;">
+        <h2>📧 Email / SMTP Settings</h2>
+        <p style="color:#666;margin-bottom:16px;">Configure SMTP to enable one-click email delivery of invoices. Works with Gmail (app password), Outlook, or any SMTP provider.</p>
+        <div id="smtpConfigBadge" style="margin-bottom:12px;"></div>
+        <div class="settings-grid">
+          <label>SMTP Host <input id="setSmtpHost" placeholder="e.g. smtp.gmail.com"></label>
+          <label>SMTP Port <input id="setSmtpPort" type="number" placeholder="587"></label>
+          <label>SMTP Username <input id="setSmtpUser" placeholder="your@email.com"></label>
+          <label>SMTP Password <input id="setSmtpPass" type="password" placeholder="Leave blank to keep existing"></label>
+          <label>From Name/Email <input id="setSmtpFrom" placeholder="e.g. billing@yourcompany.com"></label>
+        </div>
+        <div style="margin-top:14px;"><button class="btn green" onclick="saveSmtpSettings()">💾 Save Email Settings</button></div>
+      </div>
+
+      <!-- User Management -->
+      <div class="card">
+        <div class="card-header-row">
+          <h2>👤 User Management</h2>
+          <button class="btn green small-btn" onclick="showAddUserModal()">+ Add User</button>
+        </div>
+        <p style="color:#666;margin-bottom:16px;">Manage team accounts. Admin can see everything; Staff can create invoices and quotes only.</p>
+        <div id="userList"></div>
+      </div>

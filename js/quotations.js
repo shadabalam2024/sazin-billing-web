@@ -8,6 +8,12 @@ function loadNextQuotePreview(attempts = 20, delay = 500) {
   }).catch(() => { if (attempts > 1) setTimeout(() => loadNextQuotePreview(attempts - 1, delay), delay); });
 }
 
+// Always start with one blank row so the user can type straight away
+// instead of having to click "+ Add Row" first.
+document.addEventListener("DOMContentLoaded", () => {
+  if (!document.querySelector("#qMeasurements tbody").children.length) addQuoteRow();
+});
+
 function addQuoteRow(preset = {}) {
   const tbody = document.querySelector("#qMeasurements tbody");
   const row = document.createElement("tr");
@@ -113,6 +119,7 @@ function resetQuoteForm() {
   document.getElementById("quoteGrandTotal").textContent = "Grand Total: ₹ 0.00";
   document.getElementById("quoteNumber").classList.remove("confirmed");
   loadNextQuotePreview();
+  addQuoteRow();
 }
 
 function printQuote() {
@@ -136,7 +143,7 @@ function printQuote() {
 }
 
 function loadQuotes() {
-  apiFetch("/quotes").then(res => res.json()).then(quotes => {
+  return apiFetch("/quotes").then(res => res.json()).then(quotes => {
     const filterStatus = document.getElementById("quoteStatusFilter").value;
     const filtered = filterStatus ? quotes.filter(q => q.status === filterStatus) : quotes;
     const el = document.getElementById("quoteHistory");
@@ -159,7 +166,7 @@ function loadQuotes() {
           <div class="card-actions">
             ${q.status === "open" ? `<button class="btn green small-btn" onclick="convertQuoteToInvoice('${esc(q.id)}')">✅ Convert to Invoice</button>` : ""}
             ${q.status === "converted" ? `<span style="font-size:0.8rem;color:#28a745">→ ${esc(q.convertedToInvoice || "")}</span>` : ""}
-            <button class="btn red small-btn" onclick="deleteQuote('${esc(q.id)}')">🗑️</button>
+            <button class="btn red small-btn" onclick="deleteQuote('${esc(q.id)}')" title="Delete" aria-label="Delete">🗑️</button>
           </div>
         </div>
         <h3>${esc(q.name)} (${esc(q.mobile)})</h3>

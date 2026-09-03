@@ -2,7 +2,7 @@
 let _inventoryAll = [];
 
 function loadInventory() {
-  apiFetch("/inventory").then(r => r.json()).then(items => {
+  return apiFetch("/inventory").then(r => r.json()).then(items => {
     _inventoryAll = items; renderInventoryTable(items);
     const cats = [...new Set(items.map(i => i.category).filter(Boolean))];
     const sel = document.getElementById("invCategoryFilter"); const current = sel.value;
@@ -34,9 +34,9 @@ function renderInventoryTable(items) {
       <td>₹ ${parseFloat(i.sellingPrice || 0).toFixed(2)}</td>
       <td style="color:${isLow ? "#dc3545" : "inherit"};font-weight:${isLow ? "700" : "400"}">${i.stockQty}${isLow ? " ⚠️" : ""}</td>
       <td class="inv-actions">
-        <button class="btn green small-btn" onclick="openAddStockModal('${esc(i.id)}')">➕</button>
-        <button class="btn blue small-btn" onclick="openAddInventoryModal('${esc(i.id)}')">Edit</button>
-        <button class="btn red small-btn" onclick="deleteInventoryItem('${esc(i.id)}')">Del</button>
+        <button class="btn green small-btn" onclick="openAddStockModal('${esc(i.id)}')" title="Add Stock" aria-label="Add Stock">➕</button>
+        <button class="btn blue small-btn" onclick="openAddInventoryModal('${esc(i.id)}')" title="Edit" aria-label="Edit">Edit</button>
+        <button class="btn red small-btn" onclick="deleteInventoryItem('${esc(i.id)}')" title="Delete" aria-label="Delete">Del</button>
       </td>
     </tr>`;
   }).join("")}</tbody></table></div>`;

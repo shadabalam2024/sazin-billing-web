@@ -3,7 +3,7 @@ let _analyticsMonthChart = null;
 let _analyticsTopChart = null;
 
 function loadAnalytics() {
-  apiFetch("/analytics").then(res => res.json()).then(data => {
+  return apiFetch("/analytics").then(res => res.json()).then(data => {
     document.getElementById("dailyReport").innerHTML = `
       <div class="stat-box"><span class="stat-label">Date</span><span class="stat-value">${esc(data.daily.date)}</span></div>
       <div class="stat-box"><span class="stat-label">Invoices Today</span><span class="stat-value">${data.daily.invoiceCount}</span></div>

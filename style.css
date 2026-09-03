@@ -304,6 +304,13 @@ button.yellow:hover { background: #e0a800; }
   font-weight: 500;
   margin-top: 1px;
 }
+.sidebar-version {
+  margin-top: auto;
+  padding: 12px 14px;
+  font-size: 0.66rem;
+  color: #b0bac8;
+  font-weight: 500;
+}
 
 /* ===============================
    SIDEBAR NAV (vertical)
@@ -353,8 +360,30 @@ button.yellow:hover { background: #e0a800; }
   border-left: 3px solid #0063c6;
   box-shadow: 0 1px 4px rgba(0,99,198,0.1);
 }
-.tab-content { display: none; }
+.tab-content { display: none; position: relative; }
 .tab-content.active { display: block; }
+
+.tab-loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.75);
+  z-index: 5;
+  font-weight: 600;
+  color: #555;
+}
+.tab-spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid #d8e3ee;
+  border-top-color: #0078d7;
+  border-radius: 50%;
+  animation: tab-spin 0.7s linear infinite;
+}
+@keyframes tab-spin { to { transform: rotate(360deg); } }
 
 /* ===============================
    INVOICE PREVIEW BAR
@@ -481,6 +510,16 @@ button.yellow:hover { background: #e0a800; }
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #0050a0 0%, #003d82 40%, #002a5e 100%);
+}
+.login-version {
+  position: fixed;
+  bottom: 14px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.55);
+  font-weight: 500;
 }
 .login-box {
   background: #fff;

@@ -1,0 +1,96 @@
+      <div id="billSection">
+        <header class="app-header">
+          <h1 id="hdrName">Sazin Tech</h1>
+          <p id="hdrAddr"></p>
+          <p id="hdrGst" class="hdr-gst"></p>
+        </header>
+        <div class="card">
+          <div class="client-details-header">
+            <h2>Client Details</h2>
+            <span class="date-display" id="currentDate"></span>
+          </div>
+
+          <!-- Document Type + Invoice Number row -->
+          <div class="doctype-invoice-row">
+            <div class="doctype-select-wrap">
+              <label class="doctype-label">Document Type</label>
+              <select id="billDocType" class="doctype-select" onchange="onDocTypeChange()">
+                <option value="invoice">🧾 Tax Invoice</option>
+                <option value="proforma">📋 Proforma Invoice</option>
+                <option value="credit-note">➖ Credit Note</option>
+                <option value="debit-note">➕ Debit Note</option>
+              </select>
+            </div>
+            <div class="invoice-preview-bar" style="flex:1;">
+              <span class="invoice-label" id="docNumLabel">Invoice No:</span>
+              <span class="invoice-value" id="invoiceNumber">Loading...</span>
+            </div>
+          </div>
+
+          <!-- Against Invoice (for credit/debit notes) -->
+          <div id="originalInvoiceRow" style="display:none;margin-bottom:12px;display:none;align-items:center;gap:10px;flex-wrap:wrap;">
+            <label style="font-weight:600;white-space:nowrap;">Against Invoice No:</label>
+            <input id="originalInvoiceNo" placeholder="e.g. SAZIN/26-27/042" style="max-width:260px;margin:0;" oninput="onOriginalInvoiceType()">
+            <span id="originalInvoiceFetchStatus" style="font-size:0.82rem;"></span>
+          </div>
+
+          <div class="client-details-form">
+            <input id="name" placeholder="Enter client name">
+            <input id="mobile" placeholder="10-digit mobile (auto-fills known clients)">
+            <input id="address" placeholder="Enter address">
+          </div>
+          <div class="client-details-form" style="margin-top:10px;">
+            <input id="recipientGstin" placeholder="Client GSTIN (optional — leave blank if unregistered)">
+            <input id="placeOfSupplyState" placeholder="Place of supply — state (e.g. Bihar)">
+            <input id="placeOfSupplyStateCode" placeholder="State code (e.g. 10)" style="max-width:140px;">
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h2>Items</h2>
+            <div></div>
+          </div>
+          <div style="overflow-x:auto;">
+          <table id="measurements">
+            <thead>
+              <tr>
+                <th>Product Name</th><th>HSN</th><th>Length (mm)</th><th>Width (mm)</th>
+                <th>Unit</th><th>Qty</th><th>Billed</th><th>Rate</th><th>Disc %</th><th>GST %</th><th>Taxable</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          </div>
+          <div class="grand-total-container">
+            <div class="totals-block">
+              <div id="taxBreakup" class="tax-breakup"></div>
+              <div class="payment-status-row" style="margin:8px 0;">
+                <label style="font-weight:600;margin-right:8px;">Payment:</label>
+                <select id="billPaymentStatus" class="status-select" onchange="onBillPaymentChange()">
+                  <option value="unpaid">❌ Unpaid</option>
+                  <option value="partial">⚡ Partial</option>
+                  <option value="paid">✅ Paid</option>
+                </select>
+              </div>
+              <div id="partialAmountRow" style="display:none;align-items:center;gap:8px;margin:6px 0;">
+                <label style="font-weight:600;">Amount Paid: ₹</label>
+                <input type="number" id="billAmountPaid" placeholder="Enter amount" style="width:140px;margin:0;" oninput="updatePartialRemaining()">
+                <span id="billRemaining" style="color:#dc3545;font-weight:600;"></span>
+              </div>
+              <h3 id="grandTotal">Grand Total: ₹ 0.00</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button class="btn blue" onclick="addRow()">+ Add Row</button>
+        <button class="btn green" onclick="saveData()">💾 Save</button>
+        <button class="btn blue" onclick="printBill()">🖨️ Print</button>
+        <button class="btn blue" onclick="savePDF()">📄 Save as PDF</button>
+        <button class="btn green" onclick="shareWhatsApp()">💬 WhatsApp</button>
+        <button class="btn blue" onclick="showEmailModal()">📧 Email</button>
+        <button class="btn yellow admin-only" onclick="showSaveTemplateModal()">💾 Template</button>
+        <button class="btn yellow" onclick="openLoadTemplateModal()">📂 Load Template</button>
+      </div>
+

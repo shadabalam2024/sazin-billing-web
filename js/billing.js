@@ -246,6 +246,12 @@ function updatePartialRemaining() {
   remainingEl.textContent = `Remaining: ₹ ${remaining.toFixed(2)}`;
 }
 
+// Always start with one blank row so the user can type straight away
+// instead of having to click "+ Add Row" first.
+document.addEventListener("DOMContentLoaded", () => {
+  if (!document.querySelector("#measurements tbody").children.length) addRow();
+});
+
 // ── AUTO-FILL client on mobile input ──
 document.addEventListener("DOMContentLoaded", () => {
   const mobileInput = document.getElementById("mobile");
@@ -316,4 +322,5 @@ function resetForm() {
   const statusEl = document.getElementById("originalInvoiceFetchStatus");
   if (statusEl) statusEl.textContent = "";
   loadNextInvoicePreview();
+  addRow();
 }

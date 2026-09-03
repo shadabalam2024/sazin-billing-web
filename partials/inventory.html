@@ -1,0 +1,13 @@
+      <div class="card">
+        <div class="card-header-row">
+          <h2>🏪 Inventory</h2>
+          <button class="btn green small-btn" onclick="openAddInventoryModal()">+ Add Product</button>
+        </div>
+        <div class="search-row" style="margin-bottom:12px;">
+          <input id="invSearchInput" placeholder="Search products..." oninput="filterInventoryTable()" style="flex:1;margin:0;">
+          <select id="invCategoryFilter" onchange="filterInventoryTable()" style="min-width:140px;">
+            <option value="">All Categories</option>
+          </select>
+        </div>
+        <div id="inventoryList"></div>
+      </div>

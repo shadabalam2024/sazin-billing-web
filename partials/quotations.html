@@ -1,0 +1,52 @@
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header-row">
+          <h2>📝 Create Quotation / Estimate</h2>
+          <div class="invoice-preview-bar" style="min-width:220px;">
+            <span class="invoice-label">Quote No:</span>
+            <span class="invoice-value" id="quoteNumber">Loading...</span>
+          </div>
+        </div>
+        <div class="client-details-form">
+          <input id="qName" placeholder="Client name">
+          <input id="qMobile" placeholder="10-digit mobile">
+          <input id="qAddress" placeholder="Address">
+        </div>
+        <div class="client-details-form" style="margin-top:10px;">
+          <input id="qGstin" placeholder="Client GSTIN (optional)">
+          <input id="qPlaceState" placeholder="Place of supply state">
+          <input id="qPlaceCode" placeholder="State code" style="max-width:140px;">
+        </div>
+        <div style="overflow-x:auto;margin-top:12px;">
+          <table id="qMeasurements">
+            <thead>
+              <tr>
+                <th>Product Name</th><th>HSN</th><th>Length (mm)</th><th>Width (mm)</th>
+                <th>Unit</th><th>Qty</th><th>Billed</th><th>Rate</th><th>Disc %</th><th>GST %</th><th>Taxable</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="grand-total-container">
+          <h3 id="quoteGrandTotal">Grand Total: ₹ 0.00</h3>
+        </div>
+        <div class="button-row" style="justify-content:flex-start;margin-top:10px;">
+          <button class="btn blue" onclick="addQuoteRow()">+ Add Row</button>
+          <button class="btn green" onclick="saveQuote()">💾 Save Quotation</button>
+          <button class="btn blue" onclick="printQuote()">🖨️ Print Quote</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header-row">
+          <h2>📋 Quotation History</h2>
+          <div style="display:flex;gap:8px;">
+            <select id="quoteStatusFilter" onchange="loadQuotes()" style="padding:6px;border:1px solid #ccc;border-radius:4px;font-size:0.85rem;">
+              <option value="">All Status</option>
+              <option value="open">Open</option>
+              <option value="converted">Converted</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div id="quoteHistory"></div>
+      </div>
