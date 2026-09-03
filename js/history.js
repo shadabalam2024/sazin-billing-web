@@ -32,11 +32,11 @@ function renderHistory(records) {
         ? `<span class="ledger-pay-badge ledger-pay-${ps}">${ps.charAt(0).toUpperCase() + ps.slice(1)}</span>`
         : '<span style="color:#aaa;font-size:0.78rem;">—</span>';
       const actions = `<td class="inv-actions">
-            <button class="btn blue small-btn" onclick="printFromHistory('${esc(r.invoiceNumber)}')" title="Print">🖨</button>
-            ${canEdit ? `<button class="btn blue small-btn" onclick="openEditModal('${esc(r.invoiceNumber)}')" title="Edit">✏️</button>` : ''}
-            ${isInvoice && ps !== 'paid' ? `<button class="btn green small-btn" onclick="openInvoicePaymentModal('${esc(r.invoiceNumber)}')" title="Record Payment">💰</button>` : ''}
-            ${isInvoice ? `<button class="btn small-btn" style="background:#e67e22;color:#fff;" onclick="openReturnExchangeModal('${esc(r.invoiceNumber)}')" title="Return / Exchange">↩</button>` : ''}
-            <button class="btn red small-btn" onclick="deleteHistoryEntry('${esc(r.invoiceNumber)}','${esc(r.docType || 'invoice')}')" title="Delete">🗑</button>
+            <button class="btn blue small-btn" onclick="printFromHistory('${esc(r.invoiceNumber)}')" title="Print" aria-label="Print">🖨</button>
+            ${canEdit ? `<button class="btn blue small-btn" onclick="openEditModal('${esc(r.invoiceNumber)}')" title="Edit" aria-label="Edit">✏️</button>` : ''}
+            ${isInvoice && ps !== 'paid' ? `<button class="btn green small-btn" onclick="openInvoicePaymentModal('${esc(r.invoiceNumber)}')" title="Record Payment" aria-label="Record Payment">💰</button>` : ''}
+            ${isInvoice ? `<button class="btn small-btn" style="background:#e67e22;color:#fff;" onclick="openReturnExchangeModal('${esc(r.invoiceNumber)}')" title="Return / Exchange" aria-label="Return / Exchange">↩</button>` : ''}
+            <button class="btn red small-btn" onclick="deleteHistoryEntry('${esc(r.invoiceNumber)}','${esc(r.docType || 'invoice')}')" title="Delete" aria-label="Delete">🗑</button>
            </td>`;
       return `<tr>
         <td style="white-space:nowrap;font-size:0.85rem;">${esc(r.dateStr)}</td>
@@ -135,7 +135,7 @@ function _renderInvPayModal(r) {
           <span style="color:#555;white-space:nowrap;">${new Date(p.date).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" })}</span>
           <span style="font-weight:600;color:#0078d7;white-space:nowrap;">₹ ${parseFloat(p.amount || 0).toFixed(2)}</span>
           <span style="flex:1;color:#888;">${esc(p.note || "—")}</span>
-          <button class="btn red small-btn" onclick="deleteInvoicePayment('${esc(r.invoiceNumber)}','${esc(p.id)}')" style="padding:2px 7px;font-size:0.75rem;" title="Delete Payment">✕</button>
+          <button class="btn red small-btn" onclick="deleteInvoicePayment('${esc(r.invoiceNumber)}','${esc(p.id)}')" style="padding:2px 7px;font-size:0.75rem;" title="Delete Payment" aria-label="Delete Payment">✕</button>
         </div>`).join("")}`;
   }
 }

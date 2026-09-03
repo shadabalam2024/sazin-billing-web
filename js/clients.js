@@ -87,12 +87,12 @@ function renderClients(data) {
           <option value="partial" ${status==="partial"?"selected":""}>⚡ Partial</option>
           <option value="paid"    ${status==="paid"?"selected":""}>✅ Paid</option>
         </select>
-        <button class="btn blue small-btn" onclick="printFromHistory('${esc(inv)}')" title="Print">🖨️</button>
-        <button class="btn green small-btn" onclick="whatsappFromHistory('${esc(inv)}')" title="Send via WhatsApp">💬</button>
-        <button class="btn blue small-btn" onclick="emailFromHistory('${esc(inv)}')" title="Email">📧</button>
-        <button class="btn blue small-btn" onclick="openEditModal('${esc(inv)}')" title="Edit">✏️</button>
-        ${(client.docType === 'invoice' || !client.docType) ? `<button class="btn small-btn" style="background:#e67e22;color:#fff;" onclick="openReturnExchangeModal('${esc(inv)}')" title="Return / Exchange">↩</button>` : ''}
-        <button class="btn red  small-btn" onclick="deleteInvoice('${esc(inv)}')" title="Delete">🗑️</button>
+        <button class="btn blue small-btn" onclick="printFromHistory('${esc(inv)}')" title="Print" aria-label="Print">🖨️</button>
+        <button class="btn green small-btn" onclick="whatsappFromHistory('${esc(inv)}')" title="Send via WhatsApp" aria-label="Send via WhatsApp">💬</button>
+        <button class="btn blue small-btn" onclick="emailFromHistory('${esc(inv)}')" title="Email" aria-label="Email">📧</button>
+        <button class="btn blue small-btn" onclick="openEditModal('${esc(inv)}')" title="Edit" aria-label="Edit">✏️</button>
+        ${(client.docType === 'invoice' || !client.docType) ? `<button class="btn small-btn" style="background:#e67e22;color:#fff;" onclick="openReturnExchangeModal('${esc(inv)}')" title="Return / Exchange" aria-label="Return / Exchange">↩</button>` : ''}
+        <button class="btn red  small-btn" onclick="deleteInvoice('${esc(inv)}')" title="Delete" aria-label="Delete">🗑️</button>
       </div>` : `<div class="card-actions">${statusBadge(status, amountPaid, t.grandTotal)}</div>`;
     return `
       <div class="client-card" id="card-${esc(inv)}">
@@ -309,9 +309,9 @@ function renderClientNotesList(mobile) {
     <div class="note-item${n.done ? " note-done" : ""}" data-id="${esc(n.id)}">
       <span class="note-text">${esc(n.text)}</span>
       <div class="note-actions">
-        <button class="note-cut-btn" title="${n.done ? "Mark as pending" : "Mark as done / cut"}"
+        <button class="note-cut-btn" title="${n.done ? "Mark as pending" : "Mark as done / cut"}" aria-label="${n.done ? "Mark as pending" : "Mark as done / cut"}"
           onclick="toggleClientNote('${esc(mobile)}','${esc(n.id)}')">${n.done ? "↩" : "✂"}</button>
-        <button class="note-del-btn" title="Delete note"
+        <button class="note-del-btn" title="Delete note" aria-label="Delete note"
           onclick="deleteClientNote('${esc(mobile)}','${esc(n.id)}')">✕</button>
       </div>
     </div>`).join("");

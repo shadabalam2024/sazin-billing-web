@@ -19,7 +19,7 @@ function loadUsers() {
           <td style="white-space:nowrap;">
             <button class="btn blue small-btn" data-perms='${JSON.stringify(u.permissions || null)}' onclick="showEditUserModal('${esc(u.username)}','${esc(u.role)}',JSON.parse(this.dataset.perms))">Edit</button>
             ${u.username !== currentUser
-              ? `<button class="btn small-btn" style="background:#e67e22;color:#fff;" onclick="forceLogout('${esc(u.username)}')" title="Kick off all devices">⏏ Logout</button>
+              ? `<button class="btn small-btn" style="background:#e67e22;color:#fff;" onclick="forceLogout('${esc(u.username)}')" title="Kick off all devices" aria-label="Kick off all devices">⏏ Logout</button>
                  <button class="btn red small-btn" onclick="deleteUser('${esc(u.username)}')">Delete</button>`
               : '<span style="font-size:0.75rem;color:#888;padding:0 6px;">(you)</span>'}
           </td>

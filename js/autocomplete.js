@@ -23,7 +23,7 @@ function _buildProductCell(name, hsn) {
     <div class="prod-ac-wrap">
       <div class="prod-ac-row">
         <input type="text" class="r-desc" value="${n}" placeholder="Product name" autocomplete="off" data-sugid="${uid}">
-        <button type="button" class="prod-dropdown-btn" tabindex="-1" title="Browse all inventory">▼</button>
+        <button type="button" class="prod-dropdown-btn" tabindex="-1" title="Browse all inventory" aria-label="Browse all inventory">▼</button>
       </div>
       <span class="prod-inv-warn" style="display:none" title="Not in inventory — stock won't be deducted">⚠️ Not in inventory</span>
     </div>
