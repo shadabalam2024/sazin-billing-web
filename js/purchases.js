@@ -58,7 +58,7 @@ function renderPurchases(purchases) {
             <span style="color:#555;">${new Date(pay.date).toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" })}</span>
             <span style="font-weight:600;color:#0078d7;">₹ ${parseFloat(pay.amount || 0).toFixed(2)}</span>
             <span style="color:#888;flex:1;text-align:center;">${esc(pay.note || "—")}</span>
-            ${canEdit ? `<button class="btn red small-btn" onclick="deletePurchasePayment('${esc(p.id)}','${esc(pay.id)}')" style="padding:2px 7px;font-size:0.75rem;">✕</button>` : ""}
+            ${canEdit ? `<button class="btn red small-btn" onclick="deletePurchasePayment('${esc(p.id)}','${esc(pay.id)}')" style="padding:2px 7px;font-size:0.75rem;" title="Delete Payment">✕</button>` : ""}
           </div>`).join("")}
       </div>` : "";
 
@@ -72,8 +72,8 @@ function renderPurchases(purchases) {
         </div>
         <div class="card-actions">
           <span class="payment-badge ${ps === "paid" ? "badge-paid" : ps === "partial" ? "badge-partial" : "badge-unpaid"}">${ps.charAt(0).toUpperCase() + ps.slice(1)}</span>
-          ${canEdit ? `<button class="btn blue small-btn" onclick="openEditPurchaseModal('${esc(p.id)}')">✏️</button>` : ""}
-          ${canEdit ? `<button class="btn red small-btn" onclick="deletePurchase('${esc(p.id)}')">🗑️</button>` : ""}
+          ${canEdit ? `<button class="btn blue small-btn" onclick="openEditPurchaseModal('${esc(p.id)}')" title="Edit">✏️</button>` : ""}
+          ${canEdit ? `<button class="btn red small-btn" onclick="deletePurchase('${esc(p.id)}')" title="Delete">🗑️</button>` : ""}
         </div>
       </div>
       <div style="overflow-x:auto;">
@@ -162,7 +162,7 @@ function _purchaseRowHTML() {
     <span class="pi-total" style="min-width:100px;line-height:38px;font-weight:600;color:#0078d7;">₹ 0.00</span>
     <label class="pi-inv-toggle"><input type="checkbox" class="pi-inv-check"> 📦 Inventory</label>
     <select class="pi-product" style="display:none;padding:8px;border:1px solid #ccc;border-radius:4px;min-width:180px;font-size:0.85rem;"><option value="">-- Create new inventory entry --</option></select>
-    <button class="btn red small-btn" onclick="removePurchaseRow(this)" style="margin:0;">✕</button>`;
+    <button class="btn red small-btn" onclick="removePurchaseRow(this)" style="margin:0;" title="Remove row">✕</button>`;
 }
 
 function addPurchaseRow() {
@@ -368,7 +368,7 @@ function _editPurchaseRowHTML(item = {}) {
     <input class="epi-gst" type="number" placeholder="GST %" style="flex:0.4;min-width:55px;margin:0;" value="${esc(String(item.gstRate != null ? item.gstRate : (SETTINGS.defaultGstRate || 18)))}">
     <span class="epi-total" style="min-width:90px;line-height:38px;font-weight:600;color:#0078d7;">₹ ${lineTotal}</span>
     ${invBadge}
-    <button class="btn red small-btn" onclick="removeEditPurchaseRow(this)" style="margin:0;">✕</button>
+    <button class="btn red small-btn" onclick="removeEditPurchaseRow(this)" style="margin:0;" title="Remove row">✕</button>
   </div>`;
 }
 

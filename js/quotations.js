@@ -166,7 +166,7 @@ function loadQuotes() {
           <div class="card-actions">
             ${q.status === "open" ? `<button class="btn green small-btn" onclick="convertQuoteToInvoice('${esc(q.id)}')">✅ Convert to Invoice</button>` : ""}
             ${q.status === "converted" ? `<span style="font-size:0.8rem;color:#28a745">→ ${esc(q.convertedToInvoice || "")}</span>` : ""}
-            <button class="btn red small-btn" onclick="deleteQuote('${esc(q.id)}')">🗑️</button>
+            <button class="btn red small-btn" onclick="deleteQuote('${esc(q.id)}')" title="Delete">🗑️</button>
           </div>
         </div>
         <h3>${esc(q.name)} (${esc(q.mobile)})</h3>

@@ -34,9 +34,9 @@ function renderInventoryTable(items) {
       <td>₹ ${parseFloat(i.sellingPrice || 0).toFixed(2)}</td>
       <td style="color:${isLow ? "#dc3545" : "inherit"};font-weight:${isLow ? "700" : "400"}">${i.stockQty}${isLow ? " ⚠️" : ""}</td>
       <td class="inv-actions">
-        <button class="btn green small-btn" onclick="openAddStockModal('${esc(i.id)}')">➕</button>
-        <button class="btn blue small-btn" onclick="openAddInventoryModal('${esc(i.id)}')">Edit</button>
-        <button class="btn red small-btn" onclick="deleteInventoryItem('${esc(i.id)}')">Del</button>
+        <button class="btn green small-btn" onclick="openAddStockModal('${esc(i.id)}')" title="Add Stock">➕</button>
+        <button class="btn blue small-btn" onclick="openAddInventoryModal('${esc(i.id)}')" title="Edit">Edit</button>
+        <button class="btn red small-btn" onclick="deleteInventoryItem('${esc(i.id)}')" title="Delete">Del</button>
       </td>
     </tr>`;
   }).join("")}</tbody></table></div>`;

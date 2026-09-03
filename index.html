@@ -317,7 +317,7 @@
             <select class="pi-product" style="display:none;padding:8px;border:1px solid #ccc;border-radius:4px;min-width:180px;font-size:0.85rem;">
               <option value="">-- Create new inventory entry --</option>
             </select>
-            <button class="btn red small-btn" onclick="removePurchaseRow(this)" style="margin:0;">✕</button>
+            <button class="btn red small-btn" onclick="removePurchaseRow(this)" style="margin:0;" title="Remove row">✕</button>
           </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:10px;">
@@ -675,7 +675,7 @@
             <span class="modal-inv-icon" id="inventoryModalIcon">+</span>
             <h3 id="inventoryModalTitle">Add Product</h3>
           </div>
-          <button class="modal-close-btn" onclick="closeInventoryModal()">✕</button>
+          <button class="modal-close-btn" onclick="closeInventoryModal()" title="Close">✕</button>
         </div>
         <input type="hidden" id="invEditId">
         <div class="settings-grid inv-modal-grid">

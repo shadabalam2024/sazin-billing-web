@@ -87,12 +87,12 @@ function renderClients(data) {
           <option value="partial" ${status==="partial"?"selected":""}>⚡ Partial</option>
           <option value="paid"    ${status==="paid"?"selected":""}>✅ Paid</option>
         </select>
-        <button class="btn blue small-btn" onclick="printFromHistory('${esc(inv)}')">🖨️</button>
-        <button class="btn green small-btn" onclick="whatsappFromHistory('${esc(inv)}')">💬</button>
-        <button class="btn blue small-btn" onclick="emailFromHistory('${esc(inv)}')">📧</button>
-        <button class="btn blue small-btn" onclick="openEditModal('${esc(inv)}')">✏️</button>
-        ${(client.docType === 'invoice' || !client.docType) ? `<button class="btn small-btn" style="background:#e67e22;color:#fff;" onclick="openReturnExchangeModal('${esc(inv)}')">↩</button>` : ''}
-        <button class="btn red  small-btn" onclick="deleteInvoice('${esc(inv)}')">🗑️</button>
+        <button class="btn blue small-btn" onclick="printFromHistory('${esc(inv)}')" title="Print">🖨️</button>
+        <button class="btn green small-btn" onclick="whatsappFromHistory('${esc(inv)}')" title="Send via WhatsApp">💬</button>
+        <button class="btn blue small-btn" onclick="emailFromHistory('${esc(inv)}')" title="Email">📧</button>
+        <button class="btn blue small-btn" onclick="openEditModal('${esc(inv)}')" title="Edit">✏️</button>
+        ${(client.docType === 'invoice' || !client.docType) ? `<button class="btn small-btn" style="background:#e67e22;color:#fff;" onclick="openReturnExchangeModal('${esc(inv)}')" title="Return / Exchange">↩</button>` : ''}
+        <button class="btn red  small-btn" onclick="deleteInvoice('${esc(inv)}')" title="Delete">🗑️</button>
       </div>` : `<div class="card-actions">${statusBadge(status, amountPaid, t.grandTotal)}</div>`;
     return `
       <div class="client-card" id="card-${esc(inv)}">
