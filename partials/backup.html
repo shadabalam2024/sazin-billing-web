@@ -1,0 +1,18 @@
+      <div class="card">
+        <h2>💾 Backup & Restore</h2>
+        <p style="color:#666;margin-bottom:20px;">Export all invoice data (plus settings, catalog, quotes & templates) as a JSON file, or restore from a backup.</p>
+        <div class="backup-section">
+          <div class="backup-box">
+            <h3>⬇ Export Backup</h3>
+            <p>Download all records as a <code>.json</code> file.</p>
+            <button class="btn green" onclick="exportBackup()">Export Backup</button>
+          </div>
+          <div class="backup-box">
+            <h3>⬆ Restore Backup</h3>
+            <p>Upload a previously exported backup file to restore data.</p>
+            <input type="file" id="restoreFile" accept=".json" style="margin-bottom:10px;">
+            <button class="btn yellow" onclick="restoreBackup()">Restore from File</button>
+          </div>
+        </div>
+        <div id="backupStatus"></div>
+      </div>

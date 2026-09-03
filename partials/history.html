@@ -1,0 +1,23 @@
+      <div class="card">
+        <div class="card-header-row">
+          <h2>🕘 Document History</h2>
+        </div>
+        <div class="search-row" style="margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <input id="historySearch" placeholder="Search by name, mobile, doc number..." style="flex:2;min-width:200px;" oninput="filterHistory()">
+          <select id="historyTypeFilter" onchange="filterHistory()" style="min-width:140px;">
+            <option value="">All Types</option>
+            <option value="invoice">Invoice</option>
+            <option value="proforma">Proforma</option>
+            <option value="quote">Quotation</option>
+            <option value="credit-note">Credit Note</option>
+            <option value="debit-note">Debit Note</option>
+          </select>
+          <select id="historyStatusFilter" onchange="filterHistory()" style="min-width:130px;">
+            <option value="">All Statuses</option>
+            <option value="paid">Paid</option>
+            <option value="partial">Partial</option>
+            <option value="unpaid">Unpaid</option>
+          </select>
+        </div>
+        <div id="historyList"></div>
+      </div>

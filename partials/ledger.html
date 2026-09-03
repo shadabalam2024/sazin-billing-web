@@ -1,0 +1,47 @@
+      <div class="card">
+        <div class="ledger-header">
+          <h2>📒 Ledger</h2>
+          <button class="btn green small-btn" onclick="exportLedgerCSV()">⬇ Export CSV</button>
+        </div>
+
+        <!-- Period selector -->
+        <div class="ledger-period-bar">
+          <button class="ledger-period-btn active" id="ledgerBtn-month" onclick="setLedgerPeriod('month',this)">This Month</button>
+          <button class="ledger-period-btn" id="ledgerBtn-year"  onclick="setLedgerPeriod('year',this)">This Year</button>
+          <button class="ledger-period-btn" id="ledgerBtn-all"   onclick="setLedgerPeriod('all',this)">All Time</button>
+
+          <!-- Custom month -->
+          <span class="ledger-custom-sep">|</span>
+          <label style="font-size:0.82rem;font-weight:600;color:#555;">Month:</label>
+          <input type="month" id="ledgerCustomMonth" onchange="setLedgerPeriod('month',null,{month:this.value})"
+            style="padding:5px 8px;border:1px solid #ccc;border-radius:5px;font-size:0.85rem;">
+
+          <!-- Custom year -->
+          <label style="font-size:0.82rem;font-weight:600;color:#555;">Year:</label>
+          <input type="number" id="ledgerCustomYear" placeholder="YYYY" min="2020" max="2099"
+            style="width:80px;padding:5px 8px;border:1px solid #ccc;border-radius:5px;font-size:0.85rem;"
+            onchange="setLedgerPeriod('year',null,{year:this.value})">
+        </div>
+
+        <!-- Summary cards -->
+        <div id="ledgerSummary" class="ledger-summary-row"></div>
+
+        <!-- Type filter -->
+        <div class="ledger-filter-bar">
+          <label style="font-size:0.82rem;font-weight:600;color:#555;">Show:</label>
+          <select id="ledgerTypeFilter" onchange="applyLedgerFilter()" style="padding:5px 10px;border:1px solid #ccc;border-radius:5px;font-size:0.85rem;">
+            <option value="">All Transactions</option>
+            <option value="Sale">Sales (Invoices)</option>
+            <option value="Credit Note">Credit Notes</option>
+            <option value="Debit Note">Debit Notes</option>
+            <option value="Purchase">Purchases</option>
+            <option value="Expense">Expenses</option>
+          </select>
+          <span id="ledgerRowCount" style="font-size:0.82rem;color:#888;"></span>
+        </div>
+
+        <!-- Ledger table -->
+        <div id="ledgerTableWrap" style="overflow-x:auto;margin-top:8px;">
+          <p style="color:#888;">Select a period above to load the ledger.</p>
+        </div>
+      </div>

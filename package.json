@@ -4,6 +4,7 @@
   "description": "Sazin Tech Billing System — web version (Vercel + Supabase)",
   "scripts": {
     "dev": "node backend/src/server.js",
+    "build:html": "node scripts/build-index.js",
     "test": "node backend/test/gst.test.js && node backend/test/smoke.test.js"
   },
   "dependencies": {

@@ -1,0 +1,72 @@
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header-row"><h2>🛒 Record Purchase</h2></div>
+        <div class="settings-grid" style="margin-bottom:12px;">
+          <label>Supplier Name <input id="purchaseSupplier" placeholder="e.g. ABC Traders"></label>
+          <label>Supplier Bill No. <input id="purchaseBillNo" placeholder="e.g. INV-2025-001"></label>
+          <label>Supplier State <input id="purchaseSupplierState" placeholder="e.g. Bihar" oninput="updatePurchaseGrandTotal()"></label>
+          <label>Payment Status
+            <select id="purchasePayment" style="padding:8px;border:1px solid #ccc;border-radius:5px;font-size:0.95rem;" onchange="onPurchasePaymentChange()">
+              <option value="paid">✅ Paid</option>
+              <option value="unpaid">❌ Unpaid</option>
+              <option value="partial">⚡ Partial</option>
+            </select>
+          </label>
+          <label class="full">Notes <input id="purchaseNotes" placeholder="Optional notes"></label>
+        </div>
+        <div id="purchasePartialRow" style="display:none;background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:12px 14px;margin-bottom:12px;">
+          <div style="font-weight:600;color:#e67e22;margin-bottom:10px;">⚡ Partial Payment Details</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <label style="flex:1;min-width:140px;margin:0;">Amount Paid ₹<input type="number" id="purchaseAmountPaid" placeholder="0.00" oninput="onPurchaseAmountPaidInput()" style="display:block;margin-top:4px;"></label>
+            <label style="flex:2;min-width:160px;margin:0;">Payment Note<input id="purchaseAmountNote" placeholder="e.g. Cash, UPI, Bank" style="display:block;margin-top:4px;"></label>
+            <label style="flex:1;min-width:140px;margin:0;">Date<input type="date" id="purchaseAmountDate" style="display:block;margin-top:4px;"></label>
+          </div>
+          <div id="purchaseRemainingDisplay" style="margin-top:8px;font-weight:600;color:#e67e22;font-size:0.9rem;"></div>
+        </div>
+        <h4 style="margin:0 0 6px;">Items Purchased</h4>
+        <div style="font-size:0.78rem;color:#888;margin-bottom:8px;display:flex;gap:16px;padding:0 4px;">
+          <span style="flex:2;min-width:130px;">Item Name</span>
+          <span style="flex:0.6;min-width:65px;">HSN</span>
+          <span style="flex:0.5;min-width:65px;">Qty</span>
+          <span style="flex:0.8;min-width:85px;">Cost/Unit ₹</span>
+          <span style="flex:0.4;min-width:58px;">GST %</span>
+          <span style="min-width:100px;">Line Total</span>
+        </div>
+        <div id="purchaseItemsContainer">
+          <div class="purchase-item-row">
+            <input class="pi-name" placeholder="Item name" style="flex:2;min-width:130px;margin:0;">
+            <input class="pi-hsn" placeholder="HSN" style="flex:0.6;min-width:65px;margin:0;">
+            <input class="pi-qty" type="number" placeholder="Qty" style="flex:0.5;min-width:65px;margin:0;">
+            <input class="pi-cost" type="number" placeholder="Cost/unit ₹" style="flex:0.8;min-width:85px;margin:0;">
+            <input class="pi-gst" type="number" placeholder="GST %" style="flex:0.4;min-width:58px;margin:0;" value="18">
+            <span class="pi-total" style="min-width:100px;line-height:38px;font-weight:600;color:#0078d7;">₹ 0.00</span>
+            <label class="pi-inv-toggle"><input type="checkbox" class="pi-inv-check"> 📦 Inventory</label>
+            <select class="pi-product" style="display:none;padding:8px;border:1px solid #ccc;border-radius:4px;min-width:180px;font-size:0.85rem;">
+              <option value="">-- Create new inventory entry --</option>
+            </select>
+            <button class="btn red small-btn" onclick="removePurchaseRow(this)" style="margin:0;" title="Remove row" aria-label="Remove row">✕</button>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:10px;">
+          <button class="btn blue small-btn" onclick="addPurchaseRow()">+ Add Item</button>
+          <div style="text-align:right;">
+            <div id="purchaseGstBreakup" style="font-size:0.85rem;color:#555;line-height:1.8;margin-bottom:4px;"></div>
+            <div style="font-weight:700;font-size:1.05rem;color:#0078d7;">Grand Total: <span id="purchaseTotal">₹ 0.00</span></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;">
+          <button class="btn green" onclick="savePurchase()">💾 Save Purchase</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>📋 Purchase History</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center;">
+          <input id="purchaseSearch" placeholder="Search supplier or notes…" style="flex:1;min-width:180px;" oninput="filterPurchases()">
+          <select id="purchaseStatusFilter" style="padding:8px;border:1px solid #ccc;border-radius:5px;font-size:0.9rem;" onchange="filterPurchases()">
+            <option value="">All Statuses</option>
+            <option value="paid">✅ Paid</option>
+            <option value="unpaid">❌ Unpaid</option>
+            <option value="partial">⚡ Partial</option>
+          </select>
+        </div>
+        <div id="purchaseHistory"></div>
+      </div>

@@ -1,0 +1,28 @@
+      <div class="card" style="margin-bottom:16px;">
+        <h2>💸 Add Expense</h2>
+        <div class="settings-grid">
+          <label>Category
+            <select id="expCategory" style="padding:8px;border:1px solid #ccc;border-radius:5px;font-size:0.95rem;">
+              <option>Rent</option><option>Electricity</option><option>Salaries</option>
+              <option>Transport</option><option>Maintenance</option><option>Marketing</option>
+              <option>Stationery</option><option>Other</option>
+            </select>
+          </label>
+          <label>Amount (₹) <input id="expAmount" type="number" placeholder="e.g. 5000"></label>
+          <label class="full">Description <input id="expDescription" placeholder="e.g. Monthly shop rent"></label>
+          <label class="full">Notes <input id="expNotes" placeholder="Optional"></label>
+        </div>
+        <div style="margin-top:12px;"><button class="btn green" onclick="saveExpense()">💾 Save Expense</button></div>
+      </div>
+      <div class="card">
+        <div class="card-header-row">
+          <h2>📋 Expense History</h2>
+          <select id="expFilterCategory" onchange="loadExpenses()" style="padding:6px;border:1px solid #ccc;border-radius:4px;font-size:0.85rem;">
+            <option value="">All Categories</option>
+            <option>Rent</option><option>Electricity</option><option>Salaries</option>
+            <option>Transport</option><option>Maintenance</option><option>Marketing</option>
+            <option>Stationery</option><option>Other</option>
+          </select>
+        </div>
+        <div id="expenseHistory"></div>
+      </div>
