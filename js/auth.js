@@ -18,7 +18,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const hashTab = location.hash.slice(1);
   if (!(hashTab && applyTab(hashTab))) redirectToDefaultTab();
   window.addEventListener("hashchange", () => {
-    if (!applyTab(location.hash.slice(1))) redirectToDefaultTab();
+    const tab = location.hash.slice(1);
+    // showTab() already applies the tab directly before touching the URL;
+    // the hash assignment there fires this same event a moment later. If
+    // that tab is already showing, this is that redundant echo, not a
+    // real navigation (e.g. browser back/forward) — skip re-running the
+    // load functions a second time.
+    const active = document.querySelector(".tab-content.active");
+    if (active && active.id === "tab-" + tab) return;
+    if (!applyTab(tab)) redirectToDefaultTab();
   });
 
   document.getElementById("changePwdBtn").style.display = "inline-block";

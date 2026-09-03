@@ -62,10 +62,21 @@ function hideTabLoading(tab) {
   const overlay = el && el.querySelector(".tab-loading-overlay");
   if (overlay) overlay.remove();
 }
-// Wraps a tab's load call: shows the spinner, runs it, hides the spinner
-// once its promise settles (success or failure). fn may return a promise
-// or nothing — both are handled.
+// Wraps a tab's load call. First visit to a tab this session: show the
+// spinner (there's nothing to look at yet). Every visit after that: the
+// previous render is still sitting in the DOM (tabs are hidden via CSS,
+// never destroyed), so skip the spinner entirely and just refetch quietly
+// in the background — the load function's own render call updates the
+// content in place once it lands. This is what stops every tab switch
+// from feeling like a fresh reload: revisiting a tab is instant, and data
+// still self-corrects within about a second if something changed
+// elsewhere (e.g. an invoice saved while you were on a different tab).
+const _tabLoadedOnce = new Set();
 function withTabLoading(tab, fn) {
-  showTabLoading(tab);
-  Promise.resolve(fn()).catch(() => {}).finally(() => hideTabLoading(tab));
+  const firstLoad = !_tabLoadedOnce.has(tab);
+  if (firstLoad) showTabLoading(tab);
+  Promise.resolve(fn())
+    .then(() => { _tabLoadedOnce.add(tab); })
+    .catch(() => {})
+    .finally(() => { if (firstLoad) hideTabLoading(tab); });
 }
